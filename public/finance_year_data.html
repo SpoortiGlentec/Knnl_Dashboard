@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Financial Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+  <style>
+    body {
+      font-family: "Segoe UI", sans-serif;
+      background: linear-gradient(135deg, rgba(0, 97, 255, 0.3), #60EFFF);
+      margin: 0;
+      height: 100vh;
+      color: #333;
+    }
+
+    /* Header placeholder for dynamic header */
+    #header-placeholder {
+      text-align: center;
+      margin-bottom: 25px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+
+    select {
+      padding: 8px 10px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      min-width: 180px;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(620px, 1fr));
+      gap: 30px;
+      justify-items: stretch;
+      align-items: stretch;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .card:hover {
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+      transform: translateY(-3px);
+    }
+
+    .card h3 {
+      text-align: center;
+      color: #2b3a42;
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    canvas {
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: contain;
+    }
+
+    .sidebar {
+  position: fixed;
+  top: 100px;
+  right: -240px;
+  width: 240px;
+  height: calc(100vh - 100px);
+  background: #fff;
+  border-left: 1px solid #ddd;
+  transition: .3s;
+  padding-top: 10px;
+  z-index: 9999;
+}
+
+.sidebar a {
+  display: block;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: #0f766e;
+  font-weight: 500;
+}
+
+#content-wrapper.sidebar-open {
+  margin-right: 240px;
+  transition: margin-right .3s;
+}
+
+
+    @media (max-width: 1024px) {
+      .dashboard {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+      }
+
+      .chart-container {
+        height: 320px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .card {
+        padding: 15px;
+      }
+
+      .chart-container {
+        height: 280px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Dynamic Header -->
+  <div id="header-placeholder"></div>
+
+  <div id="sidebar" class="sidebar">
+    <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
+    <a href="./WaterReserviors.html">Water Reservoirs</a>
+    <a href="./lift_irrigation.html">Lift Irrigation</a>
+    <a href="./finance.html">Finance</a>
+    <a href="./project_dash.html">Projects</a>
+    <a href="./land_data.html">Land</a>
+    <a href="./finance_year_data.html">Yearly Finance</a>
+  </div>
+
+  <!-- <div class="controls">
+    <label for="yearSelect">Select Year for Month Chart:</label>
+    <select id="yearSelect">
+      <option>Loading...</option>
+    </select>
+  </div> -->
+<div id="content-wrapper">
+  <div class="dashboard">
+    <div class="card">
+      <h3>Field-wise Total Expenditure</h3>
+      <div class="chart-container"><canvas id="fieldPie"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h3>Field-wise Expenditure</h3>
+      <div class="chart-container"><canvas id="fieldBar"></canvas></div>
+    </div>
+
+    <div class="card">
+      <h3>Year-wise Expenditure</h3>
+      <div class="chart-container"><canvas id="yearBar"></canvas></div>
+    </div>
+
+    <div class="card">
+  <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+    <h3 id="monthTitle">Month-wise Expenditure</h3>
+
+    <select id="yearSelect" 
+            style="padding:6px 10px; font-size:14px; border-radius:6px; border:1px solid #ccc; min-width:120px;">
+      <option>Loading...</option>
+    </select>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="monthBar"></canvas>
+  </div>
+</div>
+
+  </div>
+  </div>
+
+  <script>
+    let charts = {};
+    let records = [];
+    let monthsData = [];
+    let isOpen = false;
+
+    // Load financial data
+    async function loadData() {
+      try {
+        const res = await fetch("http://localhost:3001/api/financial_year_data");
+        const data = await res.json();
+        // your API returns { records: [...], years: [...] } in the original code
+        records = data.records || [];
+        monthsData = data.years || [];
+
+        // If your API returns the DB rows directly, adjust accordingly:
+        // monthsData = data; // uncomment if your endpoint returns rows
+
+        renderStaticCharts();
+        populateYearSelect();
+        // pick default (last year in list)
+        const defaultYear = getDefaultYear();
+        if (defaultYear) {
+          renderMonthChart(defaultYear);
+        }
+      } catch (err) {
+        console.error("Failed to load data:", err);
+      }
+    }
+
+    // Render pie and bar charts
+    function renderStaticCharts() {
+      const fieldTotals = {};
+      const yearTotals = {};
+
+      records.forEach(r => {
+        const field = r.field_name || r.roman_heading || 'Others';
+        // year_value fallback to created year if not present
+        const year = r.year_value || (r.month_year ? r.month_year.split("/").pop() : 'Unknown');
+        const exp = Number(r.expenditure ?? r.total_value) || 0;
+        fieldTotals[field] = (fieldTotals[field] || 0) + exp;
+        yearTotals[year] = (yearTotals[year] || 0) + exp;
+      });
+
+      // destroy previous charts if present
+      Object.values(charts).forEach(c => c?.destroy());
+
+      // PIE CHART
+      window["fieldPie"] = new Chart(document.getElementById("fieldPie"), {
+        type: "pie",
+        data: {
+          labels: Object.keys(fieldTotals),
+          datasets: [{
+            data: Object.values(fieldTotals),
+            backgroundColor: [
+              "#FF9999", "#99BBFF", "#B6FFB6", "#D6C2FF", "#FFD9A6",
+              "#FFC0CB", "#A0E7E5", "#FFB3BA",
+              "#F4B942", "#7E6BC4", "#D6EAF8"
+            ],
+            borderColor: "#fff",
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: {
+            padding: { top: 40, bottom: 40, left: 40 }
+          },
+          plugins: {
+            legend: {
+              display: true,
+              position: "right",
+              labels: { boxWidth: 8, font: { size: 11 } }
+            },
+            datalabels: {
+              formatter: (value) => value.toLocaleString("en-IN")+"Cr",
+              anchor: "end",
+              align: "end",
+              offset: 12,
+              clamp: false,
+              color: "#000",
+              backgroundColor: function (ctx) { return ctx.dataset.backgroundColor[ctx.dataIndex]; },
+              borderRadius: 4,
+              padding: 2,
+              font: { size: 10, weight: "bold" }
+            }
+          },
+        },
+        plugins: [ChartDataLabels]
+      });
+
+      // FIELD BAR
+      window["fieldBar"] = new Chart(document.getElementById("fieldBar"), {
+        type: 'bar',
+        data: {
+          labels: Object.keys(fieldTotals),
+          datasets: [{
+            label: "Expenditure",
+            data: Object.values(fieldTotals),
+            backgroundColor: "#A0E7E5"
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end',
+              align: 'end',
+              clip: false,
+              clamp: false,
+              rotation: 90,
+              color: '#000',
+              font: { size: 12, weight: 'bold' },
+              formatter: (value) => value.toLocaleString("en-IN")+"Cr"
+            }
+          },
+          layout: { padding: { top: 70 } },
+          scales: {
+            y: { min: 1000, beginAtZero: false, ticks: { callback: v => v.toLocaleString("en-IN") } }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+
+      // YEAR LINE (same as before, with datalabels)
+      window["yearBar"] = new Chart(document.getElementById("yearBar"), {
+        type: 'line',
+        data: {
+          labels: Object.keys(yearTotals),
+          datasets: [{
+            label: "Expenditure",
+            data: Object.values(yearTotals),
+            borderColor: "#FF6384",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            borderWidth: 2,
+            tension: 0.4,
+            pointBackgroundColor: "#FF6384",
+            pointRadius: 2,
+            pointHoverRadius: 3
+          }]
+        },
+        options: {
+          responsive: true,
+          layout: { padding: { top: 60 } },
+          plugins: {
+            legend: { display: false },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              offset: -6,
+              rotation: 50,
+              color: '#000',
+              font: { size: 10, weight: "bold" },
+              formatter: (value) => value.toLocaleString("en-IN")+"Cr"
+            }
+          },
+          scales: {
+            x: { type: "category", ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 } },
+            y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString("en-IN") } }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+    }
+
+    // Populate year dropdown for month chart (shows unique years found in month_year)
+    function populateYearSelect() {
+      const yearSelect = document.getElementById("yearSelect");
+      yearSelect.innerHTML = '';
+
+      // Extract years from month_year items like "4/2024" or "01/2025"
+      const years = [...new Set(monthsData
+        .map(m => {
+          if (!m.month_year) return null;
+          const parts = String(m.month_year).split("/");
+          return parts.length === 2 ? parts[1] : null;
+        })
+        .filter(Boolean)
+      )].sort((a, b) => Number(a) - Number(b));
+
+      if (years.length === 0) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No years';
+        yearSelect.appendChild(opt);
+        return;
+      }
+
+      years.forEach(y => {
+        const opt = document.createElement('option');
+        opt.value = String(y);
+        opt.textContent = String(y);
+        yearSelect.appendChild(opt);
+      });
+
+      // default to last year
+      yearSelect.value = years[years.length - 1];
+      yearSelect.addEventListener('change', e => renderMonthChart(e.target.value));
+    }
+
+    // Render month-wise grouped bar chart (X-axis: Jan..Dec, Y-axis: expenditure, bars per roman_heading)
+    function renderMonthChart(year) {
+
+      // Month names for X-axis
+      const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+      // Filter data for selected year
+      const filtered = monthsData.filter(r => {
+        const parts = String(r.month_year).split("/");
+        return parts[1] == year;   // year is "2024"
+      });
+
+      if (filtered.length === 0) {
+        charts.monthBar?.destroy();
+        return;
+      }
+
+      // Parse month number
+      filtered.forEach(r => {
+        const [m, y] = String(r.month_year).split("/");
+        r._month = Number(m);
+        r._value = Number(r.total_value) || 0;
+      });
+
+      // Unique months sorted
+      const months = [...new Set(filtered.map(r => r._month))].sort((a, b) => a - b);
+
+      // X-axis labels
+      const labels = months.map(m => monthNames[m - 1]);
+
+      // Unique categories (roman_headings)
+      const categories = [...new Set(filtered.map(r => r.roman_heading))];
+
+      // Auto colors for each category
+    const colors = categories.map((_, i) =>
+  `hsl(${(i * 360) / categories.length}, 70%, 80%)`
+);
+
+
+      // Build stacked datasets
+      const datasets = categories.map((cat, idx) => {
+        const data = months.map(monthNo => {
+
+          // Sum all matching rows (fixes your wrong total problem)
+          const total = filtered
+            .filter(r => r._month === monthNo && r.roman_heading === cat)
+            .reduce((sum, r) => sum + r._value, 0);
+
+          return total;
+        });
+
+
+        return {
+          label: cat,
+          data,
+          backgroundColor: colors[idx],
+          borderWidth: 1,
+          stack: 'combined'
+        };
+      });
+
+      charts.monthBar?.destroy();
+
+      window["monthBar"] = new Chart(document.getElementById("monthBar"), {
+        type: "bar",
+
+        data: {
+          labels,
+          datasets
+        },
+
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+
+          plugins: {
+            legend: {
+              display: true,
+              position: "top",
+              labels: { boxWidth: 12 }
+            },
+
+            datalabels: {
+              anchor: "center",
+              align: "center",
+              offset: 4,
+              color: "#000",
+              font: { size: 10, weight: "bold" },
+
+              // Auto-hide logic
+              formatter: (value, ctx) => {
+                // Hide zero values
+                if (!value || value === 0) return "";
+
+                // Get total of this stacked bar (this month)
+                const totalForMonth = ctx.chart.data.datasets
+                  .filter(ds => ds.stack === ctx.dataset.stack)
+                  .reduce((sum, ds) => sum + (ds.data[ctx.dataIndex] || 0), 0);
+
+                // Hide if < 5% of total (adjust threshold if needed)
+                if (value / totalForMonth < 0.05) {
+                  return "";  // hide small value
+                }
+
+                // Show formatted category value
+                return value.toLocaleString("en-IN")+"Cr";
+              }
+            }
+
+          },
+
+          scales: {
+            x: {
+              stacked: true,
+              ticks: {
+                maxRotation: 45,
+                minRotation: 30
+              }
+            },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              ticks: { callback: v => v.toLocaleString("en-IN") }
+            }
+          },
+
+          layout: {
+            padding: { top: 20, right: 20, left: 10, bottom: 10 }
+          }
+        },
+
+        plugins: [ChartDataLabels]
+      });
+
+    }
+
+    function getDefaultYear() {
+      // pick the last available year from monthsData
+      const years = [...new Set((monthsData || []).map(m => {
+        if (!m.month_year) return null;
+        const p = String(m.month_year).split("/");
+        return p.length === 2 ? p[1] : null;
+      }).filter(Boolean))].sort((a, b) => Number(a) - Number(b));
+      return years[years.length - 1] || '';
+    }
+
+    // Load dynamic header from external file (optional)
+    fetch("header.html")
+  .then(res => res.text())
+  .then(html => {
+    document.getElementById("header-placeholder").innerHTML = html;
+
+    // 🔥 After header loads, sidebar toggle finally works
+    const menuBtn = document.getElementById("menu-btn");
+    const sidebar = document.getElementById("sidebar");
+    const content = document.getElementById("content-wrapper");
+
+    if (menuBtn) {
+      menuBtn.addEventListener("click", () => {
+        isOpen = !isOpen;
+        sidebar.style.right = isOpen ? "0px" : "-240px";
+        content.classList.toggle("sidebar-open", isOpen);
+      });
+    }
+
+    window.addEventListener("message", (event) => {
+  if (event.data.action === "closeFullscreen") {
+    document.getElementById("fullscreenIframeWrapper").style.display = "none";
+  }
+});
+  });
+
+  
+
+    // start
+    loadData();
+  </script>
+
+  <script src="fullscreenHandler.js"></script>
+
+<script>
+setTimeout(() => {
+  attachFullscreenToAllCharts();
+}, 500);
+
+
+</script>
+
+</body>
+
+</html>

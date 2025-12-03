@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KNNL 3D Map + Land Area Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- MapLibre -->
+  <link href="https://unpkg.com/maplibre-gl@3.6.0/dist/maplibre-gl.css" rel="stylesheet">
+  <script src="https://unpkg.com/maplibre-gl@3.6.0/dist/maplibre-gl.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+
+  <style>
+    body {
+      background: linear-gradient(135deg, rgba(0, 97, 255, 0.3), #60EFFF);
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+    }
+    #map {
+  width: 50%;
+  height: 100%;
+  position: relative; /* so legend & button can sit on top */
+}
+
+.map-legend {
+  position: absolute;
+  bottom: 55px;
+  left: 15px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  z-index: 5;
+}
+
+.map-legend-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.map-legend-row:last-child {
+  margin-bottom: 0;
+}
+
+.legend-swatch {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.reset-map-btn {
+  position: absolute;
+  bottom: 15px;
+  right: 15px;
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  z-index: 5;
+}
+
+.reset-map-btn:hover {
+  background: #005fcc;
+}
+
+
+    #header-placeholder {
+      width: 100%;
+    }
+    #right-panel {
+      width: 50%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 15px;
+      background: #f7f9fb;
+      box-sizing: border-box;
+    }
+    .controls {
+      margin-bottom: 15px;
+      display: flex;
+      gap: 20px;
+    }
+    select {
+      padding: 8px 10px;
+      font-size: 14px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      min-width: 150px;
+    }
+    .card {
+      background: white;
+      padding: 25px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+
+    .sidebar {
+  position: fixed;
+  top: 100px;
+  right: -240px;
+  width: 240px;
+  height: calc(100vh - 100px);
+  background: #fff;
+  border-left: 1px solid #ddd;
+  transition: .3s;
+  padding-top: 10px;
+  z-index: 9999;
+}
+
+.sidebar a {
+  display: block;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: #0f766e;
+  font-weight: 500;
+}
+
+#content-wrapper.sidebar-open {
+  margin-right: 240px;
+  transition: margin-right .3s;
+}
+
+    #backBtn {
+      margin-top: 10px;
+      display: none;
+      background: #007bff;
+      color: white;
+      padding: 8px 14px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+
+<body>
+<div id="header-placeholder"></div>
+
+<div id="sidebar" class="sidebar">
+  <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
+  <a href="./WaterReserviors.html">Water Reservoirs</a>
+  <a href="./lift_irrigation.html">Lift Irrigation</a>
+  <a href="./finance.html">Finance</a>
+  <a href="./project_dash.html">Projects</a>
+  <a href="./land_data.html">Land</a>
+  <a href="./finance_year_data.html">Yearly Finance</a>
+</div>
+<div id="content-wrapper">
+<div class="container">
+  <div id="map">
+    <div id="mapLegend" class="map-legend"></div>
+    <button id="resetMapBtn" class="reset-map-btn">Reset View</button>
+  </div>
+
+  <div id="right-panel">
+    
+    <h2>Zone & Project Area Dashboard</h2>
+
+    <div class="controls">
+      <select id="zoneSelect">
+        <option value="all">All Zones</option>
+      </select>
+
+      <select id="projectSelect">
+        <option value="all">All Projects</option>
+      </select>
+    </div>
+
+    <div class="card">
+      <h3 id="chartTitle">Zone-wise Total Area (Acre)</h3>
+      <canvas id="areaChart" height="250"></canvas>
+      <button id="backBtn">⬅ Back to All Zones</button>
+    </div>
+  </div>
+</div>
+</div>
+<div id="fullscreenIframeWrapper" style="
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100vw;
+  height:100vh;
+  background:white;
+  z-index:999999;">
+  <iframe id="fullscreenIframe" style="width:100%; height:100%; border:none;"></iframe>
+</div>
+
+<script>
+// ----------------------------------------
+// GLOBAL FIX
+// ----------------------------------------
+const areaChartElem = document.getElementById("areaChart");
+
+// ----------------------------------------
+// CORRECT API → GEOJSON ZONE MAPPING
+// ----------------------------------------
+const zoneNameMap = {
+  "Belagavi": "Belagavi zone",
+  "Dharwad": "Dharwad zone",
+  "Munirabad": "Munirabad zone",
+  "Shimogga": "Shivamogga zone",
+  "Kalaburgi": "Kalaburagi zone"
+};
+
+// Colors for zones
+const zoneColors = {
+  "Belagavi zone": "#3498db",
+  "Dharwad zone": "#e67e22",
+  "Munirabad zone": "#9b59b6",
+  "Shivamogga zone": "#1abc9c",
+  "Kalaburagi zone": "#e74c3c"
+};
+
+// ----------------------------------------
+// LOAD PROJECT DATA
+// ----------------------------------------
+let projectData = [];
+let isOpen = false;
+const PROJECT_API = "/api/prjct_land_info";
+
+(async function init() {
+  const res = await fetch(PROJECT_API);
+  projectData = await res.json();
+
+  populateZoneDropdown();
+  renderZoneChart();
+})();
+
+// ----------------------------------------
+// CHART FUNCTIONS
+// ----------------------------------------
+let areaChart = null;
+
+function destroyChart() {
+  if (areaChart) areaChart.destroy();
+}
+
+function asNumber(v) {
+  return Number(String(v || 0).replace(/,/g, "")) || 0;
+}
+
+function populateZoneDropdown() {
+  const zoneSelect = document.getElementById("zoneSelect");
+  const zones = [...new Set(projectData.map(r => r.zone_name))];
+
+  zones.forEach(z => {
+    const opt = document.createElement("option");
+    opt.value = z;
+    opt.textContent = z;
+    zoneSelect.appendChild(opt);
+  });
+
+  zoneSelect.addEventListener("change", () => {
+    const z = zoneSelect.value;
+    resetProjectDropdown();
+
+    if (z === "all") {
+      flyToWholeState();
+      renderZoneChart();
+      return;
+    }
+
+    populateProjects(z);
+    highlightZone(z);
+    renderProjectChart(z);
+  });
+}
+
+function resetProjectDropdown() {
+  const projectSelect = document.getElementById("projectSelect");
+  projectSelect.innerHTML = "<option value='all'>All Projects</option>";
+}
+
+function populateProjects(zone) {
+  const projectSelect = document.getElementById("projectSelect");
+  const filtered = projectData.filter(r => r.zone_name === zone);
+
+  const projects = [...new Set(filtered.map(r => r.project_name))];
+  projects.forEach(p => {
+    const opt = document.createElement("option");
+    opt.value = p;
+    opt.textContent = p;
+    projectSelect.appendChild(opt);
+  });
+}
+
+document.getElementById("projectSelect").addEventListener("change", () => {
+  const zone = document.getElementById("zoneSelect").value;
+  const proj = document.getElementById("projectSelect").value;
+
+  if (proj === "all") return renderProjectChart(zone);
+  renderSingleProject(zone, proj);
+});
+
+function renderZoneChart() {
+  destroyChart();
+  document.getElementById("chartTitle").textContent = "Zone-wise Total Area (Acre)";
+  document.getElementById("backBtn").style.display = "none";
+
+  const zoneTotals = {};
+  projectData.forEach(r => zoneTotals[r.zone_name] = r.zone_total_acre);
+
+  window["areaChart"] = new Chart(areaChartElem, {
+    type: "doughnut",
+    data: {
+      labels: Object.keys(zoneTotals),
+      datasets: [{ data: Object.values(zoneTotals) }]
+    }
+  });
+}
+
+function renderProjectChart(zone) {
+  destroyChart();
+  document.getElementById("chartTitle").textContent = `${zone} – Project-wise Area`;
+  document.getElementById("backBtn").style.display = "block";
+
+  const filtered = projectData.filter(r => r.zone_name === zone);
+  const projTotals = {};
+
+  filtered.forEach(r => {
+    projTotals[r.project_name] =
+      (asNumber(r.total_area_acre) + asNumber(r.total_area_gunta) / 40);
+  });
+
+  window["donutChart"] = new Chart(document.getElementById("donutChart"), {
+  type: "doughnut",
+  data: {
+    labels: zones,
+    datasets: [{
+      label: "Projects by Zone",
+      data: donutValues,
+      backgroundColor: colorPalette
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+        align: 'center',
+        labels: {
+          boxWidth: 15,
+          padding: 10,
+          color: '#333',
+          font: { size: 12, weight: 'bold' }
+        }
+      },
+      datalabels: {
+        color: '#fff',
+        font: { weight: 'bold', size: 14 },
+        formatter: (value) => value + " Cr" // OPTIONAL
+      }
+    }
+  },
+  plugins: [ChartDataLabels]
+}); 
+}
+
+function renderSingleProject(zone, project) {
+  destroyChart();
+  const filtered = projectData.filter(r => r.zone_name === zone && r.project_name === project);
+
+  const total = filtered.reduce((sum, r) =>
+    sum + asNumber(r.total_area_acre) + asNumber(r.total_area_gunta) / 40, 0
+  );
+
+  document.getElementById("chartTitle").textContent = `${project} (${zone})`;
+
+  window ["areaChart"] = new Chart(areaChartElem, {
+    type: "doughnut",
+    data: { labels: [project], datasets: [{ data: [total] }] }
+  });
+}
+
+document.getElementById("backBtn").onclick = () => {
+  document.getElementById("zoneSelect").value = "all";
+  resetProjectDropdown();
+  flyToWholeState();
+  renderZoneChart();
+};
+
+// ----------------------------------------
+// MAP SETUP
+// ----------------------------------------
+const map = new maplibregl.Map({
+  container: "map",
+  style: "https://demotiles.maplibre.org/style.json",
+  center: [75.7, 15.3],
+  zoom: 6.8,
+  pitch: 55,
+  bearing: -20
+});
+
+let zonesGeo = null;
+
+map.on("load", async () => {
+  const districts = await (await fetch("Karnataka.geojson")).json();
+  map.addSource("districts", { type: "geojson", data: districts });
+  map.addLayer({
+    id: "districts",
+    type: "line",
+    source: "districts",
+    paint: { "line-color": "#666", "line-width": 1 }
+  });
+
+  zonesGeo = await (await fetch("KNNL_Zones.geojson")).json();
+
+  zonesGeo.features.forEach(f => {
+    f.properties.color = zoneColors[f.properties.zone_name] || "#888";
+    f.properties.height = 2000;
+  });
+
+  map.addSource("zones", { type: "geojson", data: zonesGeo });
+
+  map.addLayer({
+    id: "zones-3d",
+    type: "fill-extrusion",
+    source: "zones",
+    
+    paint: {
+      "fill-extrusion-color": ["get", "color"],
+      "fill-extrusion-height": ["get", "height"],
+      "fill-extrusion-opacity": 0.85
+    }
+  });
+
+  map.on("click", "zones-3d", (e) => {
+    const geoName = e.features[0].properties.zone_name;
+
+    const apiZone = Object.keys(zoneNameMap)
+      .find(api => zoneNameMap[api] === geoName);
+
+    if (!apiZone) return;
+
+    document.getElementById("zoneSelect").value = apiZone;
+
+    resetProjectDropdown();
+    populateProjects(apiZone);
+    highlightZone(apiZone);
+    renderProjectChart(apiZone);
+  });
+
+  let popup = new maplibregl.Popup({
+    closeButton: false,
+    closeOnClick: false
+});
+
+map.on("mousemove", "zones-3d", (e) => {
+    if (!e.features.length) return;
+
+    const zoneName = e.features[0].properties.zone_name;
+
+    popup
+      .setLngLat(e.lngLat)
+      .setHTML(`<b>${zoneName}</b>`)
+      .addTo(map);
+});
+
+map.on("mouseleave", "zones-3d", () => {
+    popup.remove();
+});
+});
+
+
+function highlightZone(apiZone) {
+  const geoName = zoneNameMap[apiZone];
+  const feature = zonesGeo.features.find(f => f.properties.zone_name === geoName);
+
+  if (!feature) return;
+
+  let coords;
+
+  if (feature.geometry.type === "Polygon") {
+      coords = feature.geometry.coordinates[0];
+  } else if (feature.geometry.type === "MultiPolygon") {
+      coords = feature.geometry.coordinates[0][0];
+  }
+
+  let minX = Infinity, 
+      minY = Infinity, 
+      maxX = -Infinity, 
+      maxY = -Infinity;
+
+  coords.forEach(pt => {
+    minX = Math.min(minX, pt[0]);
+    minY = Math.min(minY, pt[1]);
+    maxX = Math.max(maxX, pt[0]);
+    maxY = Math.max(maxY, pt[1]);
+  });
+
+  map.fitBounds([[minX, minY], [maxX, maxY]], { padding: 40, duration: 900 });
+}
+
+function flyToWholeState() {
+  map.easeTo({ center: [75.7, 15.3], zoom: 6.5, duration: 900 });
+}
+
+// ---- Legend + Reset (minimal JS) ----
+function generateLegend() {
+  const legendEl = document.getElementById("mapLegend");
+  if (!legendEl) return;
+
+  legendEl.innerHTML = "";
+
+  Object.entries(zoneColors).forEach(([zoneName, color]) => {
+    const row = document.createElement("div");
+    row.className = "map-legend-row";
+
+    const swatch = document.createElement("span");
+    swatch.className = "legend-swatch";
+    swatch.style.backgroundColor = color;
+
+    const label = document.createElement("span");
+    label.textContent = zoneName;
+
+    row.appendChild(swatch);
+    row.appendChild(label);
+    legendEl.appendChild(row);
+  });
+}
+
+function hookResetButton() {
+  const btn = document.getElementById("resetMapBtn");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    // Reset dropdowns
+    const zoneSel = document.getElementById("zoneSelect");
+    const projSel = document.getElementById("projectSelect");
+
+    if (zoneSel) zoneSel.value = "all";
+    if (projSel) projSel.value = "all";
+
+    resetProjectDropdown();
+    renderZoneChart();
+    flyToWholeState();
+  });
+}
+
+// Run once DOM & globals are ready
+generateLegend();
+hookResetButton();
+
+
+fetch("header.html")
+  .then(res => res.text())
+  .then(html => {
+    document.getElementById("header-placeholder").innerHTML = html;
+
+    // 🔥 After header loads, sidebar toggle finally works
+    const menuBtn = document.getElementById("menu-btn");
+    const sidebar = document.getElementById("sidebar");
+    const content = document.getElementById("content-wrapper");
+
+    if (menuBtn) {
+      menuBtn.addEventListener("click", () => {
+        isOpen = !isOpen;
+        sidebar.style.right = isOpen ? "0px" : "-240px";
+        content.classList.toggle("sidebar-open", isOpen);
+      });
+    }
+  });
+  
+
+</script>
+<script src="fullscreenHandler.js"></script>
+<script>
+setTimeout(() => {
+  attachFullscreenToAllCharts();
+}, 500);
+</script>
+</body>
+</html>

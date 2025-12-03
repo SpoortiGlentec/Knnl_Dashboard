@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KNNL Dashboard</title>
+
+  <!-- Icons -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <!-- Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
+
+    body {
+      background: linear-gradient(135deg, rgba(0,97,255,.3), #60EFFF);
+      min-height:100vh;
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, #0F766E 56%, #1CDCCD 86%);
+      color:white;
+      padding:20px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      position:relative;
+      width:100%;
+      box-shadow:0 2px 5px rgba(0,0,0,.2);
+    }
+
+    .header img {
+      position:absolute;
+      left:20px;
+      height:70px;
+      width:70px;
+      object-fit:contain;
+    }
+
+    .header h1 { font-size:1.5rem; font-weight:600; }
+
+    #menu-btn {
+      position:absolute;
+      right:25px;
+      font-size:1.6rem;
+      cursor:pointer;
+      color:white;
+      transition:.3s;
+    }
+    #menu-btn:hover { transform:scale(1.1); color:#000; }
+
+    /* SIDEBAR (slides from right) */
+    .sidebar {
+      position:fixed;
+      top:100px;
+      right:-240px;
+      width:240px;
+      height:calc(100vh - 100px);
+      background:white;
+      border-left:1px solid rgba(0,0,0,.1);
+      box-shadow:-3px 0 12px rgba(0,0,0,.15);
+      transition:right .3s ease;
+      z-index:9999;
+      padding-top:15px;
+    }
+
+    .sidebar a {
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:14px 18px;
+      text-decoration:none;
+      color:#0f766e;
+      font-weight:500;
+      transition:.25s;
+    }
+
+    .sidebar a:hover {
+      background:rgba(0,120,255,.18);
+      transform:translateX(-5px);
+    }
+
+    /* CONTENT WRAPPER (shifts when sidebar opens on desktop) */
+    #content-wrapper {
+      width:100%;
+      transition:margin-right .3s ease;
+    }
+
+    #content-wrapper.sidebar-open {
+      margin-right:240px;
+    }
+
+    /* Mobile behavior (overlay — no shift) */
+    @media(max-width:768px){
+      #content-wrapper.sidebar-open { margin-right:0; }
+    }
+
+    /* DASHBOARD GRID */
+    .dashboard-container {
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:25px;
+      padding:25px;
+      max-width:1100px;
+      margin:auto;
+    }
+
+    /* CARD */
+    .dashboard-card {
+      width:300px;
+      height:260px;
+      background:white;
+      border-radius:16px;
+      overflow:hidden;
+      cursor:pointer;
+      box-shadow:0 4px 12px rgba(0,0,0,.1);
+      transition:.28s;
+      position:relative;
+      text-decoration:none;
+      color:black;
+    }
+
+    .dashboard-card:hover {
+      transform:translateY(-8px);
+      box-shadow:0 10px 26px rgba(0,120,255,.30);
+      border-image:linear-gradient(135deg,rgba(0,120,255,.9),#60EFFF) 1;
+    }
+
+    .dashboard-card img { width:100%; height:150px; object-fit:cover; }
+
+    .card-overlay {
+      position:absolute;
+      top:0; left:0;
+      width:100%; height:150px;
+      background:linear-gradient(to bottom,rgba(0,0,0,.35),transparent 65%);
+      padding:10px;
+      display:flex;
+      gap:10px;
+      align-items:flex-start;
+    }
+
+    .card-icon {
+      height:32px; width:32px;
+      background:rgba(15,23,42,.6);
+      border-radius:50%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      color:white;
+    }
+
+    .card-overlay-title {
+      color:white;
+      font-size:.78rem;
+      margin-top:6px;
+    }
+
+    .card-content {
+      padding:12px 16px;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+
+    .card-title { font-size:1.05rem; font-weight:600; }
+    .card-subtitle, .card-caption { color:#666; font-size:.85rem; }
+    .card-caption { margin-top:auto; opacity:.85; font-size:.8rem; }
+
+    /* RIPPLE */
+    .ripple-span {
+      position:absolute;
+      border-radius:50%;
+      transform:scale(0);
+      animation:ripple .6s ease-out;
+      background:rgba(0,120,255,.35);
+      pointer-events:none;
+    }
+
+    @keyframes ripple { to { transform:scale(3.5); opacity:0; } }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER -->
+  <div class="header">
+    <img src="./dept_logo1754559628.png" alt="Karnataka Emblem">
+    <h1>Karnataka Neeravari Nigam Limited</h1>
+    <i class="fa-solid fa-bars" id="menu-btn"></i>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div id="sidebar" class="sidebar">
+    <a href="./index.html"><i class="fa-solid fa-house"></i> Home</a>
+    <a href="./WaterReserviors.html"><i class="fa-solid fa-water"></i> Water Reservoirs</a>
+    <a href="./lift_irrigation.html"><i class="fa-solid fa-faucet"></i> Irrigation</a>
+    <a href="./finance.html"><i class="fa-solid fa-coins"></i> Finance</a>
+    <a href="./project_dash.html"><i class="fa-solid fa-gears"></i> Projects</a>
+    <a href="./land_data.html"><i class="fa-solid fa-map"></i> Land</a>
+    <a href="./finance_year_data.html"><i class="fa-solid fa-chart-line"></i> Yearly Finance</a>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content-wrapper">
+
+    <div class="dashboard-container">
+    <a href="./WaterReserviors.html" class="dashboard-card page-link">
+      <img src="./dam.jpg" alt="Water Reservoirs">
+      <div class="card-overlay">
+        <div class="card-icon">💧</div>
+        <div class="card-overlay-title">Reservoirs</div>
+      </div>
+      <div class="card-content">
+        <div class="card-title">Water Reservoirs</div>
+        <div class="card-subtitle">Monitor levels, capacity & inflow data.</div>
+        <div class="card-caption">Click to open detailed reservoir dashboard →</div>
+      </div>
+    </a>
+
+    <a href="./lift_irrigation.html" class="dashboard-card page-link">
+      <img src="./irrigation.jpg" alt="Lift Irrigation">
+      <div class="card-overlay">
+        <div class="card-icon">🚰</div>
+        <div class="card-overlay-title">Irrigation</div>
+      </div>
+      <div class="card-content">
+        <div class="card-title">Lift Irrigation</div>
+        <div class="card-subtitle">Track schemes, coverage & flow status.</div>
+        <div class="card-caption">Click to view lift irrigation insights →</div>
+      </div>
+    </a>
+
+    <a href="./finance.html" class="dashboard-card page-link">
+      <img src="./finanace.jpg" alt="Finance">
+      <div class="card-overlay">
+        <div class="card-icon">💹</div>
+        <div class="card-overlay-title">Finance</div>
+      </div>
+      <div class="card-content">
+        <div class="card-title">Finance</div>
+        <div class="card-subtitle">Allocation, expenditure & utilization views.</div>
+        <div class="card-caption">Click to explore finance dashboard →</div>
+      </div>
+    </a>
+
+    <a href="./project_dash.html" class="dashboard-card page-link">
+      <img src="./projects.jpg" alt="Projects">
+      <div class="card-overlay">
+        <div class="card-icon">📌</div>
+        <div class="card-overlay-title">Projects</div>
+      </div>
+      <div class="card-content">
+        <div class="card-title">Projects</div>
+        <div class="card-subtitle">Status of ongoing & completed works.</div>
+        <div class="card-caption">Click to open project monitoring →</div>
+      </div>
+    </a>
+
+    <a href="./land_data.html" class="dashboard-card page-link">
+      <img src="./land.jpg" alt="Land">
+      <div class="card-overlay">
+        <div class="card-icon">🗺️</div>
+        <div class="card-overlay-title">Land</div>
+      </div>
+      <div class="card-content">
+        <div class="card-title">Land</div>
+        <div class="card-subtitle">Land acquisition & utilization details.</div>
+        <div class="card-caption">Click to view land data dashboard →</div>
+      </div>
+    </a>
+
+    <a href="./finance_year_data.html" class="dashboard-card page-link">
+      <img src="./fin.jpg" alt="Finance year wise data">
+      <div class="card-overlay">
+        <div class="card-icon">📊</div>
+        <div class="card-overlay-title">Year-wise</div>
+      </div>
+      <div class="card-content">
+        <div class="card-title">Finance Year-wise Data</div>
+        <div class="card-subtitle">Year-on-year trends & comparisons.</div>
+        <div class="card-caption">Click to open year-wise financials →</div>
+      </div>
+    </a>
+  </div>
+
+ <script>
+    const sidebar = document.getElementById("sidebar");
+    const menuBtn = document.getElementById("menu-btn");
+    const content = document.getElementById("content-wrapper");
+
+    let isOpen = false;
+
+    // menuBtn.addEventListener("click", () => {
+    //   isOpen = !isOpen;
+    //   sidebar.style.right = isOpen ? "0px" : "-240px";
+    //   content.classList.toggle("sidebar-open", isOpen);
+    // });
+
+    // Ripple effect
+    document.querySelectorAll(".dashboard-card").forEach(card => {
+      card.addEventListener("click", e => {
+        const rect = card.getBoundingClientRect();
+        const ripple = document.createElement("span");
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.width = ripple.style.height = size+"px";
+        ripple.style.left = e.clientX - rect.left - size/2 + "px";
+        ripple.style.top = e.clientY - rect.top - size/2 + "px";
+        ripple.classList.add("ripple-span");
+        card.appendChild(ripple);
+        ripple.addEventListener("animationend",()=>ripple.remove());
+      });
+    });
+  </script>
+
+</body>
+</html>

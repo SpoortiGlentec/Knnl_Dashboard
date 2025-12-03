@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Project Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: linear-gradient(135deg, rgba(0, 97, 255, 0.3), #60EFFF);
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+ 
+    .filter-container {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+ 
+    select {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 15px;
+      cursor: pointer;
+    }
+ 
+    #projectTableContainer {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+ 
+    #projectTableContainer>div {
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      max-width: 800px;
+      width: 90%;
+      max-height: 80%;
+      overflow: auto;
+      position: relative;
+    }
+ 
+    h2 {
+      text-align: center;
+      margin-bottom: 30px;
+      color: #2c3e50;
+      font-size: 22px;
+    }
+ 
+    .charts-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 15px;
+      justify-content: center;
+    }
+ 
+    .chart-box {
+      background: #fff;
+      border-radius: 15px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 15px 15px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+ 
+    .chart-box:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    }
+ 
+    .chart-box h3 {
+      margin-top: 0;
+      font-size: 16px;
+      color: #34495e;
+      text-align: center;
+      border-bottom: 2px solid #3498db;
+      padding-bottom: 6px;
+      margin-bottom: 15px;
+    }
+ 
+    canvas {
+      width: 100% !important;
+      height: auto !important;
+    }
+ 
+    #backBtn {
+      display: block;
+      margin: 10px auto 0;
+      padding: 8px 20px;
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+ 
+    #backBtn:hover {
+      background-color: #2e86c1;
+    }
+ 
+    .sidebar {
+  position: fixed;
+  top: 100px;
+  right: -240px;
+  width: 240px;
+  height: calc(100vh - 100px);
+  background: #fff;
+  border-left: 1px solid #ddd;
+  transition: .3s;
+  padding-top: 10px;
+  z-index: 9999;
+}
+ 
+.sidebar a {
+  display: block;
+  padding: 12px 16px;
+  text-decoration: none;
+  color: #0f766e;
+  font-weight: 500;
+}
+ 
+#content-wrapper.sidebar-open {
+  margin-right: 240px;
+  transition: margin-right .3s;
+}
+ 
+   
+    @media (max-width: 600px) {
+      h2 {
+        font-size: 22px;
+      }
+ 
+      .chart-box h3 {
+        font-size: 16px;
+      }
+ 
+      body {
+        padding: 10px;
+      }
+    }
+ 
+   
+ 
+ 
+ 
+ 
+    #closeTableBtn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+ 
+<body>
+ 
+   <div id="header-placeholder"></div>
+    <div id="sidebar" class="sidebar">
+    <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
+    <a href="./WaterReserviors.html">Water Reservoirs</a>
+    <a href="./lift_irrigation.html">Lift Irrigation</a>
+    <a href="./finance.html">Finance</a>
+    <a href="./project_dash.html">Projects</a>
+    <a href="./land_data.html">Land</a>
+    <a href="./finance_year_data.html">Yearly Finance</a>
+  </div>
+ 
+<div id="content-wrapper">
+<h2>Project Status Dashboard</h2>
+  <div class="filter-container">
+    <label for="projectTypeFilter">Project Type :[<b>Type1:</b> >100 Cr &nbsp;|&nbsp;
+  <b>Type2:</b> 30–100 Cr &nbsp;|&nbsp;
+  <b>Type3:</b> 10–30 Cr ] </label>
+    <select id="projectTypeFilter">
+      <option value="All">All</option>
+ 
+    </select>
+  </div>
+ 
+  <div class="charts-container">
+    <div class="chart-box">
+      <h3>Total Numbers of Projects</h3>
+      <canvas id="donutChart" width="400" height="300"></canvas>
+    </div>
+ 
+    <div class="chart-box">
+      <h3>Budget vs Expenditure</h3>
+      <canvas id="stackedBarChart" width="400" height="300"></canvas>
+    </div>
+ 
+    <div class="chart-box">
+      <h3>Onhold Projects</h3>
+      <canvas id="onholdChart" width="400" height="300"></canvas>
+    </div>
+ 
+    <div class="chart-box">
+      <h3>Not Started Projects</h3>
+      <canvas id="notStartedChart" width="400" height="300"></canvas>
+    </div>
+ 
+ 
+ 
+    <div class="chart-box">
+      <h3>Ongoing Projects</h3>
+      <canvas id="ongoingChart" width="400" height="300"></canvas>
+    </div>
+    <div class="chart-box">
+      <h3>Ongoing Projects Budgets</h3>
+      <canvas id="clusteredColumnChart" width="400" height="300"></canvas>
+    </div>
+    <div class="chart-box">
+      <h3 style="margin-bottom: 4px;">Balance, Expenditure and Total Budget</h3>
+<p style="margin: 0; font-size: 0.7rem; color: #444;text-align: center;">[
+  <b>Type1:</b> >100 Cr &nbsp;|&nbsp;
+  <b>Type2:</b> 30–100 Cr &nbsp;|&nbsp;
+  <b>Type3:</b> 10–30 Cr ]
+</p>
+ 
+      <canvas id="zoneProjectTypeChart" width="400" height="300"></canvas>
+ 
+    </div>
+  </div>
+ 
+  <!-- Overlay table -->
+  <div id="projectTableContainer">
+    <div>
+      <h4>Projects in <span id="selectedZone"></span></h4>
+      <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
+        <thead>
+          <tr>
+            <th>Name of Work</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody id="projectTableBody"></tbody>
+      </table>
+      <button id="closeTableBtn">Close</button>
+    </div>
+  </div>
+</div>
+
+<div id="fullscreenIframeWrapper" style="
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100vw;
+  height:100vh;
+  background:white;
+  z-index:999999;">
+  <iframe id="fullscreenIframe" style="width:100%; height:100%; border:none;"></iframe>
+</div>
+ 
+ 
+</body>
+  <script>
+    let isOpen = false;
+
+    function extractChartConfig(chart) {
+  const seen = new WeakSet();
+
+  function sanitize(obj) {
+    if (obj === null || typeof obj !== "object") return obj;
+
+    if (seen.has(obj)) return null;
+    seen.add(obj);
+
+    const clean = Array.isArray(obj) ? [] : {};
+
+    for (const key in obj) {
+      const value = obj[key];
+
+      // ❌ Skip Chart.js runtime / circular keys
+      if (
+        key.startsWith("_") ||
+        key === "chart" ||
+        key === "ctx" ||
+        key === "canvas" ||
+        key === "$context" ||
+        key === "scales" // 👈 prevents primitive conversion error
+      ) {
+        continue;
+      }
+
+      // ❌ Remove formatter or function-based plugin options
+      if (typeof value === "function") continue;
+
+      // 🔥 Special case: Remove datalabels from fullscreen export
+      if (key === "plugins" && value && value.datalabels) {
+        const copy = { ...value };
+        delete copy.datalabels; // ❌ remove formatter
+        clean[key] = sanitize(copy);
+        continue;
+      }
+
+      clean[key] = sanitize(value);
+    }
+    return clean;
+  }
+
+  return {
+    type: chart.config.type,
+    data: sanitize(chart.data),
+    options: sanitize(chart.options)
+  };
+}
+
+
+
+
+// <-- Paste openChartInIframe() HERE -->
+function openChartInIframe(chartId) {
+  const chart = window[chartId];
+
+  if (!chart) {
+    console.error("❌ Chart not found:", chartId);
+    return;
+  }
+
+  const cleanConfig = extractChartConfig(chart); // SAFE STRUCTURE
+
+  const payload = {
+    id: chartId,
+    config: cleanConfig
+  };
+
+  const iframe = document.getElementById("fullscreenIframe");
+  const wrapper = document.getElementById("fullscreenIframeWrapper");
+
+  iframe.src = "fullscreen_chart.html";
+
+  iframe.onload = () => {
+    iframe.contentWindow.postMessage(payload, "*");
+  };
+
+  wrapper.style.display = "block";
+}
+
+
+
+
+// <-- Paste attachFullscreenToChart() HERE -->
+function attachFullscreenToChart(canvasId) {
+  const canvas = document.getElementById(canvasId);
+
+  if (!canvas) {
+    console.error("❌ Canvas not found:", canvasId);
+    return;
+  }
+
+  canvas.style.cursor = "zoom-in";
+
+  canvas.onclick = () => {
+    console.log("📌 Opening fullscreen for:", canvasId);
+    openChartInIframe(canvasId);
+  };
+}
+
+
+    async function loadCharts() {
+      const response = await fetch("http://localhost:3001/api/projects");
+      const data = await response.json();
+ 
+      const zones = [...new Set(data.map(d => d.zone))];
+      const projectTypes = [...new Set(data.map(d => d.project_type))];
+      const statuses = [...new Set(data.map(d => d.project_status))];
+      const colorPalette = ["#36A2EB", "#FF6384", "#FFCE56", "#4BC0C0", "#9966FF", "#FFA500"];
+      let selectedZone = null;
+ 
+     
+      function lightenColor(color, amount) {
+        const num = parseInt(color.replace("#", ""), 16);
+        let r = (num >> 16) + Math.round((255 - (num >> 16)) * amount);
+        let g = ((num >> 8) & 0x00FF) + Math.round((255 - ((num >> 8) & 0x00FF)) * amount);
+        let b = (num & 0x0000FF) + Math.round((255 - (num & 0x0000FF)) * amount);
+        r = r > 255 ? 255 : r; g = g > 255 ? 255 : g; b = b > 255 ? 255 : b;
+        return "#" + (r << 16 | g << 8 | b).toString(16).padStart(6, '0');
+      }
+ 
+      // --- Donut Chart ---
+      const zoneCounts = {};
+      data.forEach(r => { zoneCounts[r.zone] = (zoneCounts[r.zone] || 0) + 1; });
+ 
+      const donutValues = zones.map(z => zoneCounts[z]);
+ 
+      window["donutChart"] = new Chart(document.getElementById("donutChart"), {
+        type: "doughnut",
+        data: {
+          labels: zones,
+          datasets: [{
+            label: "Projects by Zone",
+            data: donutValues,
+            backgroundColor: colorPalette
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+              align: 'center',
+              labels: {
+                boxWidth: 15,
+                padding: 10,
+                color: '#333',
+                font: { size: 12, weight: 'bold' }
+              }
+            },
+            datalabels: {
+              color: '#fff',
+              font: { weight: 'bold', size: 14 },
+              anchor: 'center',
+              align: 'center',
+              formatter: v => v
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+ 
+ 
+      // --- Stacked Bar Chart ---
+      const totalBudgets = zones.map(z => data.filter(d => d.zone === z).reduce((sum, r) => sum + parseFloat(r.total_budget || 0), 0));
+      const expenditures = zones.map(z => data.filter(d => d.zone === z).reduce((sum, r) => sum + parseFloat(r.expenditure || 0), 0));
+ 
+      window["stackedBarChart"] = new Chart(document.getElementById("stackedBarChart"), {
+        type: 'bar',
+        data: {
+          labels: zones, datasets: [
+            { label: 'Total Budget', data: totalBudgets, backgroundColor: '#36A2EB' },
+            { label: 'Expenditure', data: expenditures, backgroundColor: '#FF6384' }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: { x: { stacked: true }, y: { stacked: true } },
+          plugins: {
+ 
+            datalabels: {
+              color: '#fff', anchor: 'center', align: 'center', font: { weight: 'bold' },
+              formatter: value => parseFloat(value).toFixed(2)+"Cr" // <-- 2 decimal places
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+      //clustred column chart
+ 
+      const balances = zones.map(z => data.filter(d => d.zone === z).reduce((sum, r) => sum + parseFloat(r.balance || 0), 0));
+ 
+      window["clusteredColumnChart"] = new Chart(document.getElementById("clusteredColumnChart"), {
+  type: 'bar',
+  data: {
+    labels: zones,
+    datasets: [
+      { label: 'Balance', data: balances, backgroundColor: '#9966FF' },
+      { label: 'Expenditure', data: expenditures, backgroundColor: '#FF6384' },
+      { label: 'Total Budget', data: totalBudgets, backgroundColor: '#36A2EB' }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+        align: 'center',
+        labels: {
+          boxWidth: 15,
+          padding: 3,
+          color: '#333',
+          font: { size: 10, weight: 'bold' }
+        }
+      },
+      datalabels: {
+        color: '#000',
+        anchor: 'end',
+        align: 'end',
+        font: { weight: 'bold' },
+        formatter: value => Math.round(value)+"Cr",
+        rotation: 270
+      }
+    },
+    scales: {
+      x: { stacked: false },
+      y: { stacked: false, beginAtZero: true }
+    }
+  },
+  plugins: [ChartDataLabels]
+});
+ 
+      // --- Not Started Projects Chart ---
+      const notStartedData = data.filter(d => d.project_status === "Not Started");
+      const notStartedZones = [...new Set(notStartedData.map(d => d.zone))];
+      const notStartedDatasets = [];
+      notStartedZones.forEach((zone) => {
+        const projects = notStartedData.filter(p => p.zone === zone);
+        projects.forEach((p, i) => {
+          notStartedDatasets.push({
+            label: `${p.name_of_work}\n${p.remarks}`,
+            data: notStartedZones.map(z => z === zone ? 1 : 0),
+            backgroundColor: colorPalette[i % colorPalette.length]
+          });
+        });
+      });
+ 
+      window ["notStartedChart"] = new Chart(document.getElementById("notStartedChart"), {
+        type: "bar",
+        data: { labels: notStartedZones, datasets: notStartedDatasets },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+ 
+            datalabels: {
+              color: '#000',
+              anchor: 'end',
+              align: 'end',
+              font: { weight: 'bold' },
+              formatter: function (value, ctx) {
+                const datasets = ctx.chart.data.datasets;
+                if (ctx.datasetIndex === datasets.length - 1) {
+                  return datasets.reduce((a, ds) => a + ds.data[ctx.dataIndex], 0);
+                }
+                return '';
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (ctx) {
+                  const parts = ctx.dataset.label.split('\n');
+ 
+                  // Function to wrap text for long project names or remarks
+                  function wrapText(text, maxWidth = 100) {
+                    const words = text.split(' ');
+                    const lines = [];
+                    let line = '';
+                    words.forEach(word => {
+                      if ((line + word).length > maxWidth) {
+                        lines.push(line.trim());
+                        line = '';
+                      }
+                      line += word + ' ';
+                    });
+                    if (line) lines.push(line.trim());
+                    return lines;
+                  }
+ 
+                  const nameLines = wrapText(parts[0]);
+                  const remarkLines = parts[1] ? wrapText(parts[1]) : [];
+                  return [...nameLines, "Remarks:", ...remarkLines];
+                }
+              }
+            }
+          },
+          scales: {
+            x: { stacked: true },
+            y: {
+              stacked: true,
+              beginAtZero: true,
+              title: { display: true, text: "Number of Projects" },
+              ticks: { precision: 0, stepSize: 1 }
+            }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+ 
+      // --- Onhold Projects Chart ---
+      const onholdData = data.filter(d => d.project_status === "Onhold");
+      const onholdZones = [...new Set(onholdData.map(d => d.zone))];
+      const onholdDatasets = [];
+ 
+      onholdZones.forEach(zone => {
+        const projects = onholdData.filter(p => p.zone === zone);
+        projects.forEach((p, i) => {
+          onholdDatasets.push({
+            label: `${p.name_of_work}\n${p.remarks}`,
+            data: onholdZones.map(z => z === zone ? 1 : 0),
+            backgroundColor: colorPalette[i % colorPalette.length]
+          });
+        });
+      });
+ 
+      window["onholdChart"] = new Chart(document.getElementById("onholdChart"), {
+        type: "bar",
+        data: { labels: onholdZones, datasets: onholdDatasets },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+ 
+            tooltip: {
+              callbacks: {
+                label: function (ctx) {
+                  const label = ctx.dataset.label || '';
+                  // Split project name and remarks by newline
+                  const parts = label.split('\n');
+                  // Wrap long text into lines of ~80 chars
+                  const wrapText = (text) => text.match(/.{1,100}(\s|$)/g) || [text];
+                  const nameLines = wrapText(parts[0]);
+                  const remarkLines = parts[1] ? wrapText(parts[1]) : [];
+ 
+                  return [...nameLines, "Remarks:", ...remarkLines];
+ 
+                }
+              },
+              bodyFont: { size: 12 },
+              titleFont: { size: 13, weight: 'bold' },
+              displayColors: false,
+            },
+            datalabels: {
+              color: '#000', anchor: 'end', align: 'end', font: { weight: 'bold' },
+              formatter: function (value, ctx) {
+                const datasets = ctx.chart.data.datasets;
+                if (ctx.datasetIndex === datasets.length - 1) {
+                  return datasets.reduce((a, ds) => a + ds.data[ctx.dataIndex], 0);
+                }
+                return '';
+              }
+            }
+          },
+          scales: {
+            x: { stacked: true },
+            y: { stacked: true, beginAtZero: true, title: { display: true, text: "Number of Projects" } }
+          }
+        },
+        plugins: [ChartDataLabels]
+      });
+
+      function ongoingClickHandler(evt, elements) {
+    if (!elements.length) return;
+    const idx = elements[0].index;
+    const zone = ongoingZones[idx];
+    const projects = ongoingProjects.filter(p => p.zone === zone);
+
+    const tbody = document.getElementById("projectTableBody");
+    tbody.innerHTML = "";
+    
+    projects.forEach(p => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${p.name_of_work}</td><td>${p.remarks}</td>`;
+        tbody.appendChild(tr);
+    });
+
+    document.getElementById("selectedZone").innerText = zone;
+    document.getElementById("projectTableContainer").style.display = "flex";
+}
+ 
+      // --- Ongoing Projects Chart ---
+      const ongoingProjects = data.filter(d => d.project_status.toLowerCase() === "ongoing");
+      const ongoingZones = [...new Set(ongoingProjects.map(d => d.zone))];
+      const ongoingCounts = ongoingZones.map(zone => ongoingProjects.filter(p => p.zone === zone).length);
+ 
+      window["ongoingChart"] = new Chart(document.getElementById("ongoingChart"), {
+    type: "bar",
+    data: {
+        labels: ongoingZones,
+        datasets: [{ label: "Ongoing Projects", data: ongoingCounts, backgroundColor: "#36A2EB" }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        onClick: ongoingClickHandler,  // <-- fixed
+        plugins: {
+            legend: { display: false },
+            datalabels: { color: '#000', anchor: 'end', align: 'right', font: { weight: 'bold' }, formatter: v => v }
+        },
+        scales: { 
+            x: { beginAtZero: true, title: { display: true, text: "Number of Projects" }},
+            y: { title: { display: true, text: "Zone" }}
+        }
+    },
+    plugins: [ChartDataLabels]
+});
+ 
+      document.getElementById("closeTableBtn").onclick = () => {
+        document.getElementById("projectTableContainer").style.display = "none";
+      };
+ 
+      // --- Zone & Project Type Chart ---
+      const xLabels = zones.flatMap(z => projectTypes.map(t => `${z}-${t}`));
+      const zoneProjectDatasets = statuses.map((status, i) => ({
+        label: status,
+        backgroundColor: colorPalette[i % colorPalette.length],
+        data: zones.flatMap(z => projectTypes.map(t => data.filter(d => d.zone === z && d.project_type === t && d.project_status === status).length)),
+        stack: "stack"
+      }));
+ 
+     
+ 
+      const multiLevelLabelPlugin = {
+        id: 'multiLevelLabels',
+        afterDraw(chart) {
+          const ctx = chart.ctx;
+          const xAxis = chart.scales.x;
+          ctx.save();
+          ctx.font = 'bold 10px Arial';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+ 
+          // Draw zone labels **below the ticks**
+          zones.forEach((zone, i) => {
+            const startIndex = i * projectTypes.length;
+            const endIndex = startIndex + projectTypes.length - 1;
+            const startX = xAxis.getPixelForTick(startIndex);
+            const endX = xAxis.getPixelForTick(endIndex);
+            const y = xAxis.bottom + 6;
+            ctx.fillText(zone, (startX + endX) / 2, y);
+          });
+ 
+          ctx.restore();
+        }
+      };
+ 
+      // Ensure there’s enough bottom padding to show zone labels
+      window ["zoneProjectTypeChart"] = new Chart(document.getElementById("zoneProjectTypeChart"), {
+  type: "bar",
+  data: {
+    labels: xLabels,
+    datasets: zoneProjectDatasets
+  },
+  options: {
+    responsive: true,
+    layout: { padding: { bottom: 40 } },
+    plugins: {
+      legend: {
+        position: 'top',
+        align: 'center',
+        labels: {
+          boxWidth: 15,
+          padding: 10,
+          color: '#333',
+          font: { size: 10, weight: 'bold' }
+        }
+      },
+      datalabels: {
+        color: '#333',
+        anchor: 'center',
+        align: 'center',
+        font: { weight: 'bold', size: 10 },
+        formatter: value => value > 1 ? value : '' // hides 0s
+      }
+    },
+    scales: {
+      x: {
+        stacked: true,
+        ticks: {
+          callback: (v, i) => xLabels[i].split("-")[1], // shows only project type part
+          autoSkip: false,
+          maxRotation: 60,
+          minRotation: 40
+        },
+        grid: { drawOnChartArea: false }
+      },
+      y: {
+        stacked: true,
+        beginAtZero: true,
+        title: {
+          display: true,
+          text: "Number of Projects"
+        }
+      }
+    }
+  },
+  plugins: [ChartDataLabels, multiLevelLabelPlugin] // ✅ include datalabel plugin here
+});
+ 
+      // when dropdown value changes
+ 
+ 
+      // ---- Dropdown: Filter by Project Type ----
+      const projectTypeFilter = document.getElementById("projectTypeFilter");
+ 
+      // populate dropdown
+      projectTypes.forEach(type => {
+        const opt = document.createElement("option");
+        opt.value = type;
+        opt.textContent = type;
+        projectTypeFilter.appendChild(opt);
+      });
+ 
+      //let selectedZone = null;
+      let selectedProjectType = null;
+ 
+      projectTypeFilter.addEventListener("change", function () {
+        const selectedValue = this.value;
+        selectedProjectType = selectedValue === "All" ? null : selectedValue;
+        updateHighlight();
+      });
+ 
+      // ---- Donut Chart Zone Click ----
+      donutChart.options.onClick = function (evt, elements) {
+        if (elements.length > 0) {
+          const clickedIndex = elements[0].index;
+          const clickedZone = zones[clickedIndex];
+ 
+          // Toggle zone selection
+          selectedZone = selectedZone === clickedZone ? null : clickedZone;
+ 
+          updateHighlight();
+        }
+      };
+ 
+      // ---- Highlight Function ----
+      function updateHighlight() {
+        // Filter data by selected zone and project type
+        const filteredData = data.filter(d =>
+          (!selectedZone || d.zone === selectedZone) &&
+          (!selectedProjectType || d.project_type === selectedProjectType)
+        );
+ 
+        // --- Donut Chart ---
+        const zoneCounts = {};
+        filteredData.forEach(r => { zoneCounts[r.zone] = (zoneCounts[r.zone] || 0) + 1; });
+        donutChart.data.datasets[0].data = zones.map(z => zoneCounts[z] || 0);
+        donutChart.update();
+ 
+        // --- Stacked Bar Chart ---
+        stackedBarChart.data.datasets[0].data = zones.map(z =>
+          filteredData.filter(d => d.zone === z).reduce((sum, r) => sum + parseFloat(r.total_budget || 0), 0)
+        );
+        stackedBarChart.data.datasets[1].data = zones.map(z =>
+          filteredData.filter(d => d.zone === z).reduce((sum, r) => sum + parseFloat(r.expenditure || 0), 0)
+        );
+        stackedBarChart.update();
+ 
+        // --- Clustered Column Chart ---
+        clusteredColumnChart.data.datasets[0].data = zones.map(z =>
+          filteredData.filter(d => d.zone === z).reduce((sum, r) => sum + parseFloat(r.balance || 0), 0)
+        );
+        clusteredColumnChart.data.datasets[1].data = zones.map(z =>
+          filteredData.filter(d => d.zone === z).reduce((sum, r) => sum + parseFloat(r.expenditure || 0), 0)
+        );
+        clusteredColumnChart.data.datasets[2].data = zones.map(z =>
+          filteredData.filter(d => d.zone === z).reduce((sum, r) => sum + parseFloat(r.total_budget || 0), 0)
+        );
+        clusteredColumnChart.update();
+ 
+        // --- Zone & Project Type Chart ---
+        const xLabelsFiltered = zones.flatMap(z => projectTypes.map(t => `${z}-${t}`));
+        const zoneProjectDatasetsFiltered = statuses.map((status, i) => ({
+          label: status,
+          backgroundColor: colorPalette[i % colorPalette.length],
+          data: zones.flatMap(z =>
+            projectTypes.map(t =>
+              filteredData.filter(d => d.zone === z && d.project_type === t && d.project_status === status).length
+            )
+          ),
+          stack: "stack"
+        }));
+        zoneProjectTypeChart.data.labels = xLabelsFiltered;
+        zoneProjectTypeChart.data.datasets = zoneProjectDatasetsFiltered;
+        zoneProjectTypeChart.update();
+ 
+        // --- Not Started Chart ---
+        const notStartedData = filteredData.filter(d => d.project_status === "Not Started");
+        const notStartedDatasets = [];
+        notStartedZones.forEach((zone) => {
+          const projects = notStartedData.filter(p => p.zone === zone);
+          projects.forEach((p, i) => {
+            notStartedDatasets.push({
+              label: `${p.name_of_work}\n${p.remarks}`,
+              data: notStartedZones.map(z => z === zone ? 1 : 0),
+              backgroundColor: colorPalette[i % colorPalette.length]
+            });
+          });
+        });
+        notStartedChart.data.datasets = notStartedDatasets;
+        notStartedChart.update();
+ 
+        // --- Onhold Chart ---
+        const onholdData = filteredData.filter(d => d.project_status === "Onhold");
+        const onholdDatasets = [];
+        onholdZones.forEach(zone => {
+          const projects = onholdData.filter(p => p.zone === zone);
+          projects.forEach((p, i) => {
+            onholdDatasets.push({
+              label: `${p.name_of_work}\n${p.remarks}`,
+              data: onholdZones.map(z => z === zone ? 1 : 0),
+              backgroundColor: colorPalette[i % colorPalette.length]
+            });
+          });
+        });
+        onholdChart.data.datasets = onholdDatasets;
+        onholdChart.update();
+ 
+        // --- Ongoing Chart ---
+        const ongoingProjects = filteredData.filter(d => d.project_status.toLowerCase() === "ongoing");
+        const ongoingCounts = ongoingZones.map(zone => ongoingProjects.filter(p => p.zone === zone).length);
+        ongoingChart.data.datasets[0].data = ongoingCounts;
+        ongoingChart.update();
+      }
+ 
+ 
+      // backBtn.onclick = () => { selectedZone = null; updateHighlight(); backBtn.style.display = "none"; };
+
+      // backBtn.onclick = () => { selectedZone = null; updateHighlight(); backBtn.style.display = "none"; };
+
+// ---- Enable Fullscreen for Each Chart ----
+
+attachFullscreenToChart("donutChart");
+attachFullscreenToChart("stackedBarChart");
+attachFullscreenToChart("onholdChart");
+attachFullscreenToChart("notStartedChart");
+attachFullscreenToChart("ongoingChart");
+attachFullscreenToChart("clusteredColumnChart");
+attachFullscreenToChart("zoneProjectTypeChart");
+
+
+
+} // <-- end of loadCharts()
+
+ 
+    
+ 
+    loadCharts();
+
+    
+   
+    // Fetch header from header.html
+    fetch("header.html")
+  .then(res => res.text())
+  .then(html => {
+    document.getElementById("header-placeholder").innerHTML = html;
+ 
+    // 🔥 After header loads, sidebar toggle finally works
+    const menuBtn = document.getElementById("menu-btn");
+    const sidebar = document.getElementById("sidebar");
+    const content = document.getElementById("content-wrapper");
+ 
+    if (menuBtn) {
+      menuBtn.addEventListener("click", () => {
+        isOpen = !isOpen;
+        sidebar.style.right = isOpen ? "0px" : "-240px";
+        content.classList.toggle("sidebar-open", isOpen);
+      });
+    }
+
+    window.addEventListener("message", (event) => {
+  if (event.data.action === "closeFullscreen") {
+    document.getElementById("fullscreenIframeWrapper").style.display = "none";
+  }
+});
+
+  });
+ 
+  </script>
+</body>
+</html>
+ 

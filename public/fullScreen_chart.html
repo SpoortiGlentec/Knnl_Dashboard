@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Fullscreen Chart</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+
+  <style>
+    body {
+      margin: 0;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    #closeBtn {
+      background: #0f76ce;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 17px;
+      border-radius: 6px;
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 1000;
+    }
+
+    canvas {
+      flex: 1;
+      width: 100% !important;
+      height: calc(100vh - 50px) !important;
+    }
+  </style>
+</head>
+<body>
+
+<button id="closeBtn">← Back</button>
+<canvas id="fullscreenCanvas"></canvas>
+
+<script>
+let fullscreenChart = null;
+
+window.addEventListener("message", (event) => {
+  const { id, config } = event.data;
+
+  if (!config) return;
+
+  if (fullscreenChart) fullscreenChart.destroy();
+
+  // Restore datalabels
+  config.plugins = config.plugins || [];
+  if (!config.plugins.includes(ChartDataLabels)) {
+    config.plugins.push(ChartDataLabels);
+  }
+
+  // ----------- FIX STACKED BARS ----------
+  if (config.options?.scales) {
+    const { x, y } = config.options.scales;
+
+    if (x?.stacked || y?.stacked) {
+      config.options.scales.x.stacked = true;
+      config.options.scales.y.stacked = true;
+    }
+  }
+
+  // -------- FIX HORIZONTAL BAR ----------
+  if (config.options?.indexAxis === "y") {
+    config.options.indexAxis = "y";
+  }
+
+  // -------- RESTORE INTERACTIVE CLICK FOR ONGOING --------
+  if (id === "ongoingChart") {
+    config.options.onClick = (evt, items) => {
+      if (items.length > 0) {
+        window.parent.postMessage({ action: "openTable", row: items[0].index }, "*");
+      }
+    };
+  }
+
+  fullscreenChart = new Chart(
+    document.getElementById("fullscreenCanvas"),
+    config
+  );
+});
+
+// Close fullscreen
+document.getElementById("closeBtn").onclick = () => {
+  window.parent.postMessage({ action: "closeFullscreen" }, "*");
+};
+
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") document.getElementById("closeBtn").click();
+});
+</script>
+
+</body>
+</html>
