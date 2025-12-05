@@ -7,168 +7,10 @@
   <title>Project Dashboard</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-  <style>
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      background: linear-gradient(135deg, rgba(0, 97, 255, 0.3), #60EFFF);
-      margin: 0;
-      padding: 20px;
-      color: #333;
-    }
- 
-    .filter-container {
-      text-align: center;
-      margin-bottom: 20px;
-    }
- 
-    select {
-      padding: 8px 12px;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      font-size: 15px;
-      cursor: pointer;
-    }
- 
-    #projectTableContainer {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.5);
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
- 
-    #projectTableContainer>div {
-      background: #fff;
-      padding: 20px;
-      border-radius: 8px;
-      max-width: 800px;
-      width: 90%;
-      max-height: 80%;
-      overflow: auto;
-      position: relative;
-    }
- 
-    h2 {
-      text-align: center;
-      margin-bottom: 30px;
-      color: #2c3e50;
-      font-size: 22px;
-    }
- 
-    .charts-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-      gap: 15px;
-      justify-content: center;
-    }
- 
-    .chart-box {
-      background: #fff;
-      border-radius: 15px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      padding: 15px 15px;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
- 
-    .chart-box:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
-    }
- 
-    .chart-box h3 {
-      margin-top: 0;
-      font-size: 16px;
-      color: #34495e;
-      text-align: center;
-      border-bottom: 2px solid #3498db;
-      padding-bottom: 6px;
-      margin-bottom: 15px;
-    }
- 
-    canvas {
-      width: 100% !important;
-      height: auto !important;
-    }
- 
-    #backBtn {
-      display: block;
-      margin: 10px auto 0;
-      padding: 8px 20px;
-      background-color: #3498db;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background-color 0.2s ease;
-    }
- 
-    #backBtn:hover {
-      background-color: #2e86c1;
-    }
- 
-    .sidebar {
-  position: fixed;
-  top: 100px;
-  right: -240px;
-  width: 240px;
-  height: calc(100vh - 100px);
-  background: #fff;
-  border-left: 1px solid #ddd;
-  transition: .3s;
-  padding-top: 10px;
-  z-index: 9999;
-}
- 
-.sidebar a {
-  display: block;
-  padding: 12px 16px;
-  text-decoration: none;
-  color: #0f766e;
-  font-weight: 500;
-}
- 
-#content-wrapper.sidebar-open {
-  margin-right: 240px;
-  transition: margin-right .3s;
-}
- 
-   
-    @media (max-width: 600px) {
-      h2 {
-        font-size: 22px;
-      }
- 
-      .chart-box h3 {
-        font-size: 16px;
-      }
- 
-      body {
-        padding: 10px;
-      }
-    }
- 
-   
- 
- 
- 
- 
-    #closeTableBtn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      padding: 5px 10px;
-      cursor: pointer;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
  
-<body>
+<body class="projects-page">
  
    <div id="header-placeholder"></div>
     <div id="sidebar" class="sidebar">
@@ -239,20 +81,23 @@
  
   <!-- Overlay table -->
   <div id="projectTableContainer">
-    <div>
-      <h4>Projects in <span id="selectedZone"></span></h4>
-      <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse; width:100%;">
-        <thead>
-          <tr>
-            <th>Name of Work</th>
-            <th>Remarks</th>
-          </tr>
-        </thead>
-        <tbody id="projectTableBody"></tbody>
-      </table>
-      <button id="closeTableBtn">Close</button>
-    </div>
+  <div>
+    <h4><span id="modalTitle"></span></h4>
+    <h4>Zone: <span id="selectedZone" style="color:#007bff;"></span></h4>
+    <canvas id="modalChart" width="600" height="400"></canvas>
+    <table id="projectTable" style="width:100%; border-collapse:collapse; margin-top:15px;">
+      <thead>
+        <tr style="background:#f2f2f2;">
+          <th>Project Name</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody id="projectTableBody"></tbody>
+    </table>
+
+    <button id="closeTableBtn">Close</button>
   </div>
+</div>
 </div>
 
 <div id="fullscreenIframeWrapper" style="
@@ -270,107 +115,40 @@
  
 </body>
   <script>
-    let isOpen = false;
+    let isOpen = false
+ 
+function formatCrores(value) {
+  if (!value || isNaN(value)) return "";
+  return Number(value).toFixed(2) + " Cr";
+}
 
-    function extractChartConfig(chart) {
-  const seen = new WeakSet();
+function sanitizeChartData(labels, datasets) {
+  return datasets.map(dataset => {
+    dataset.data = dataset.data.map(value => {
+      if (value === null || value === 0 || isNaN(value)) return null;
+      return Number(value).toFixed(2);
+    });
+    return dataset;
+  });
+}
 
-  function sanitize(obj) {
-    if (obj === null || typeof obj !== "object") return obj;
+function removeEmptyLabels(labels, datasets) {
+  const newLabels = [];
+  const newData = datasets.map(() => []);
 
-    if (seen.has(obj)) return null;
-    seen.add(obj);
-
-    const clean = Array.isArray(obj) ? [] : {};
-
-    for (const key in obj) {
-      const value = obj[key];
-
-      // ❌ Skip Chart.js runtime / circular keys
-      if (
-        key.startsWith("_") ||
-        key === "chart" ||
-        key === "ctx" ||
-        key === "canvas" ||
-        key === "$context" ||
-        key === "scales" // 👈 prevents primitive conversion error
-      ) {
-        continue;
-      }
-
-      // ❌ Remove formatter or function-based plugin options
-      if (typeof value === "function") continue;
-
-      // 🔥 Special case: Remove datalabels from fullscreen export
-      if (key === "plugins" && value && value.datalabels) {
-        const copy = { ...value };
-        delete copy.datalabels; // ❌ remove formatter
-        clean[key] = sanitize(copy);
-        continue;
-      }
-
-      clean[key] = sanitize(value);
+  labels.forEach((label, index) => {
+    const hasValue = datasets.some(ds => ds.data[index] && ds.data[index] !== null && ds.data[index] !== "0.00");
+    if (hasValue) {
+      newLabels.push(label);
+      datasets.forEach((ds, i) => newData[i].push(ds.data[index]));
     }
-    return clean;
-  }
+  });
 
-  return {
-    type: chart.config.type,
-    data: sanitize(chart.data),
-    options: sanitize(chart.options)
-  };
+  datasets.forEach((ds, i) => ds.data = newData[i]);
+
+  return newLabels;
 }
 
-
-
-
-// <-- Paste openChartInIframe() HERE -->
-function openChartInIframe(chartId) {
-  const chart = window[chartId];
-
-  if (!chart) {
-    console.error("❌ Chart not found:", chartId);
-    return;
-  }
-
-  const cleanConfig = extractChartConfig(chart); // SAFE STRUCTURE
-
-  const payload = {
-    id: chartId,
-    config: cleanConfig
-  };
-
-  const iframe = document.getElementById("fullscreenIframe");
-  const wrapper = document.getElementById("fullscreenIframeWrapper");
-
-  iframe.src = "fullscreen_chart.html";
-
-  iframe.onload = () => {
-    iframe.contentWindow.postMessage(payload, "*");
-  };
-
-  wrapper.style.display = "block";
-}
-
-
-
-
-// <-- Paste attachFullscreenToChart() HERE -->
-function attachFullscreenToChart(canvasId) {
-  const canvas = document.getElementById(canvasId);
-
-  if (!canvas) {
-    console.error("❌ Canvas not found:", canvasId);
-    return;
-  }
-
-  canvas.style.cursor = "zoom-in";
-
-  canvas.onclick = () => {
-    console.log("📌 Opening fullscreen for:", canvasId);
-    openChartInIframe(canvasId);
-  };
-}
 
 
     async function loadCharts() {
@@ -433,6 +211,8 @@ function attachFullscreenToChart(canvasId) {
         },
         plugins: [ChartDataLabels]
       });
+
+      
  
  
       // --- Stacked Bar Chart ---
@@ -440,26 +220,86 @@ function attachFullscreenToChart(canvasId) {
       const expenditures = zones.map(z => data.filter(d => d.zone === z).reduce((sum, r) => sum + parseFloat(r.expenditure || 0), 0));
  
       window["stackedBarChart"] = new Chart(document.getElementById("stackedBarChart"), {
-        type: 'bar',
-        data: {
-          labels: zones, datasets: [
-            { label: 'Total Budget', data: totalBudgets, backgroundColor: '#36A2EB' },
-            { label: 'Expenditure', data: expenditures, backgroundColor: '#FF6384' }
-          ]
+  type: 'bar',
+  data: {
+    labels: zones,
+    datasets: [
+      { label: 'Total Budget', data: totalBudgets, backgroundColor: '#36A2EB' },
+      { label: 'Expenditure', data: expenditures, backgroundColor: '#FF6384' }
+    ]
+  },
+  options: {
+    responsive: true,
+    layout: { padding: { top: 50 } },
+    scales: {
+      x: { stacked: true },
+      y: { 
+        stacked: true,
+        beginAtZero: true,
+        grace: "20%",  // helps avoid clipping
+        ticks: {
+          callback: v => Number(v).toFixed(2) + " Cr"
+        }
+      }
+    },
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          boxWidth: 15,
+          padding: 6,
+          font: { size: 10, weight: "bold" }
+        }
+      },
+
+      datalabels: {
+        rotation: 0, // <-- horizontal text
+        color: '#000',
+        font: { weight: 'bold', size: 10 },
+        clamp: true,
+        offset: 4,
+
+        // Only show ONE label per stacked bar (sum of both)
+        formatter: function(value, ctx) {
+          const datasetIndex = ctx.datasetIndex;
+          const last = ctx.chart.data.datasets.length - 1;
+
+          if (datasetIndex !== last) return ""; // only top bar places label
+
+          let sum = 0;
+          ctx.chart.data.datasets.forEach(ds => sum += Number(ds.data[ctx.dataIndex] || 0));
+
+          return Number(sum).toFixed(2) + " Cr";
         },
-        options: {
-          responsive: true,
-          scales: { x: { stacked: true }, y: { stacked: true } },
-          plugins: {
- 
-            datalabels: {
-              color: '#fff', anchor: 'center', align: 'center', font: { weight: 'bold' },
-              formatter: value => parseFloat(value).toFixed(2)+"Cr" // <-- 2 decimal places
-            }
-          }
+
+        // Smart positioning to avoid overflow
+        anchor: function(ctx) {
+          const val = ctx.dataset.data[ctx.dataIndex];
+          const max = ctx.chart.scales.y.max;
+          return val < max * 0.10 ? "end" : "center";
         },
-        plugins: [ChartDataLabels]
-      });
+
+        align: function(ctx) {
+          const val = ctx.dataset.data[ctx.dataIndex];
+          const max = ctx.chart.scales.y.max;
+          return val < max * 0.10 ? "start" : "center";
+        }
+      }
+    }
+  },
+  plugins: [ChartDataLabels]
+});
+
+
+
+
+      // ---- Clean & Format Chart Values ----
+stackedBarChart.data.datasets = sanitizeChartData(stackedBarChart.data.labels, stackedBarChart.data.datasets);
+stackedBarChart.data.labels = removeEmptyLabels(stackedBarChart.data.labels, stackedBarChart.data.datasets);
+
+stackedBarChart.options.plugins.datalabels.formatter = (value) => formatCrores(value);
+stackedBarChart.update();
+
       //clustred column chart
  
       const balances = zones.map(z => data.filter(d => d.zone === z).reduce((sum, r) => sum + parseFloat(r.balance || 0), 0));
@@ -476,33 +316,47 @@ function attachFullscreenToChart(canvasId) {
   },
   options: {
     responsive: true,
+    clip: false, 
+    layout: { padding: { top: 40 } },
     plugins: {
-      legend: {
-        position: 'top',
-        align: 'center',
-        labels: {
-          boxWidth: 15,
-          padding: 3,
-          color: '#333',
-          font: { size: 10, weight: 'bold' }
-        }
-      },
+      legend: { position: 'top' },
       datalabels: {
+        rotation: 270,
         color: '#000',
-        anchor: 'end',
-        align: 'end',
-        font: { weight: 'bold' },
-        formatter: value => Math.round(value)+"Cr",
-        rotation: 270
+        font: { weight: 'bold', size: 10 },
+        formatter: value => value ? Number(value).toFixed(2) + " Cr" : "",
+
+        anchor: (ctx) => {
+          const val = ctx.dataset.data[ctx.dataIndex];
+          return val < (ctx.chart.scales.y.max * 0.06) ? "end" : "center";
+        },
+
+        align: (ctx) => {
+          const val = ctx.dataset.data[ctx.dataIndex];
+          return val < (ctx.chart.scales.y.max * 0.06) ? "start" : "end";
+        },
+
+        offset: 6,
+        clamp: true
       }
     },
     scales: {
       x: { stacked: false },
-      y: { stacked: false, beginAtZero: true }
+      y: { 
+        beginAtZero: true,
+        grace: '30%',
+        ticks: {
+          callback: v => v + " Cr"
+        }
+      }
     }
   },
   plugins: [ChartDataLabels]
 });
+
+
+
+
  
       // --- Not Started Projects Chart ---
       const notStartedData = data.filter(d => d.project_status === "Not Started");
@@ -519,67 +373,92 @@ function attachFullscreenToChart(canvasId) {
         });
       });
  
-      window ["notStartedChart"] = new Chart(document.getElementById("notStartedChart"), {
-        type: "bar",
-        data: { labels: notStartedZones, datasets: notStartedDatasets },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
- 
-            datalabels: {
-              color: '#000',
-              anchor: 'end',
-              align: 'end',
-              font: { weight: 'bold' },
-              formatter: function (value, ctx) {
-                const datasets = ctx.chart.data.datasets;
-                if (ctx.datasetIndex === datasets.length - 1) {
-                  return datasets.reduce((a, ds) => a + ds.data[ctx.dataIndex], 0);
-                }
-                return '';
-              }
-            },
-            tooltip: {
-              callbacks: {
-                label: function (ctx) {
-                  const parts = ctx.dataset.label.split('\n');
- 
-                  // Function to wrap text for long project names or remarks
-                  function wrapText(text, maxWidth = 100) {
-                    const words = text.split(' ');
-                    const lines = [];
-                    let line = '';
-                    words.forEach(word => {
-                      if ((line + word).length > maxWidth) {
-                        lines.push(line.trim());
-                        line = '';
-                      }
-                      line += word + ' ';
-                    });
-                    if (line) lines.push(line.trim());
-                    return lines;
-                  }
- 
-                  const nameLines = wrapText(parts[0]);
-                  const remarkLines = parts[1] ? wrapText(parts[1]) : [];
-                  return [...nameLines, "Remarks:", ...remarkLines];
-                }
-              }
-            }
-          },
-          scales: {
-            x: { stacked: true },
-            y: {
-              stacked: true,
-              beginAtZero: true,
-              title: { display: true, text: "Number of Projects" },
-              ticks: { precision: 0, stepSize: 1 }
-            }
-          }
+      window["notStartedChart"] = new Chart(document.getElementById("notStartedChart"), {
+  type: "bar",
+  data: { labels: notStartedZones, datasets: notStartedDatasets },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+
+      datalabels: {
+        color: '#000',
+        font: { weight: 'bold', size: 12 },
+        rotation: 0,
+        clamp: true,
+        offset: 4,
+
+        formatter: function(value, ctx) {
+          const datasets = ctx.chart.data.datasets;
+          if (ctx.datasetIndex !== datasets.length - 1) return "";
+
+          let sum = 0;
+          datasets.forEach(ds => sum += Number(ds.data[ctx.dataIndex] || 0));
+          return sum;
         },
-        plugins: [ChartDataLabels]
-      });
+
+        anchor: (ctx) => {
+          const value = ctx.dataset.data[ctx.dataIndex];
+          const max = ctx.chart.scales.y.max;
+          return value < max * 0.15 ? "end" : "center";
+        },
+
+        align: (ctx) => {
+          const value = ctx.dataset.data[ctx.dataIndex];
+          const max = ctx.chart.scales.y.max;
+          return value < max * 0.15 ? "start" : "center";
+        }
+      },
+
+      tooltip: {
+        callbacks: {
+          label: function (ctx) {
+            const parts = ctx.dataset.label.split('\n');
+
+            function wrapText(text, maxWidth = 100) {
+              const words = text.split(' ');
+              const lines = [];
+              let line = '';
+              words.forEach(word => {
+                if ((line + word).length > maxWidth) {
+                  lines.push(line.trim());
+                  line = '';
+                }
+                line += word + ' ';
+              });
+              if (line) lines.push(line.trim());
+              return lines;
+            }
+
+            const nameLines = wrapText(parts[0]);
+            const remarkLines = parts[1] ? wrapText(parts[1]) : [];
+            return [...nameLines, "Remarks:", ...remarkLines];
+          }
+        }
+      }
+    },
+
+    scales: {
+      x: { stacked: true },
+      y: {
+        stacked: true,
+        beginAtZero: true,
+        grace: "20%",
+        title: { display: true, text: "Number of Projects" },
+        ticks: { precision: 0, stepSize: 1 }
+      }
+    }
+  },
+  plugins: [ChartDataLabels]
+});
+
+
+      // ---- Cleanup for Not Started ----
+// notStartedChart.data.datasets = sanitizeChartData(notStartedChart.data.labels, notStartedChart.data.datasets);
+// notStartedChart.data.labels = removeEmptyLabels(notStartedChart.data.labels, notStartedChart.data.datasets);
+// notStartedChart.options.plugins.datalabels.formatter = value => formatCrores(value);
+// notStartedChart.update();
+
  
       // --- Onhold Projects Chart ---
       const onholdData = data.filter(d => d.project_status === "Onhold");
@@ -598,50 +477,71 @@ function attachFullscreenToChart(canvasId) {
       });
  
       window["onholdChart"] = new Chart(document.getElementById("onholdChart"), {
-        type: "bar",
-        data: { labels: onholdZones, datasets: onholdDatasets },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
- 
-            tooltip: {
-              callbacks: {
-                label: function (ctx) {
-                  const label = ctx.dataset.label || '';
-                  // Split project name and remarks by newline
-                  const parts = label.split('\n');
-                  // Wrap long text into lines of ~80 chars
-                  const wrapText = (text) => text.match(/.{1,100}(\s|$)/g) || [text];
-                  const nameLines = wrapText(parts[0]);
-                  const remarkLines = parts[1] ? wrapText(parts[1]) : [];
- 
-                  return [...nameLines, "Remarks:", ...remarkLines];
- 
-                }
-              },
-              bodyFont: { size: 12 },
-              titleFont: { size: 13, weight: 'bold' },
-              displayColors: false,
-            },
-            datalabels: {
-              color: '#000', anchor: 'end', align: 'end', font: { weight: 'bold' },
-              formatter: function (value, ctx) {
-                const datasets = ctx.chart.data.datasets;
-                if (ctx.datasetIndex === datasets.length - 1) {
-                  return datasets.reduce((a, ds) => a + ds.data[ctx.dataIndex], 0);
-                }
-                return '';
-              }
-            }
-          },
-          scales: {
-            x: { stacked: true },
-            y: { stacked: true, beginAtZero: true, title: { display: true, text: "Number of Projects" } }
+  type: "bar",
+  data: { labels: onholdZones, datasets: onholdDatasets },
+  options: {
+    responsive: true,
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: function (ctx) {
+            const label = ctx.dataset.label || '';
+            const parts = label.split('\n');
+            return [...parts];
           }
         },
-        plugins: [ChartDataLabels]
-      });
+        displayColors: false
+      },
+      datalabels: {
+        color: '#000',
+        font: { weight: 'bold', size: 12 },
+        rotation: 0,
+        clamp: true,
+        offset: 4,
+
+        formatter: function(value, ctx) {
+          const ds = ctx.chart.data.datasets;
+          if (ctx.datasetIndex !== ds.length - 1) return "";
+
+          let sum = 0;
+          ds.forEach(d => sum += Number(d.data[ctx.dataIndex] || 0));
+          return sum;
+        },
+
+        anchor: (ctx) => {
+          const value = ctx.dataset.data[ctx.dataIndex];
+          const max = ctx.chart.scales.y.max;
+          return value < max * 0.15 ? "end" : "center";
+        },
+
+        align: (ctx) => {
+          const value = ctx.dataset.data[ctx.dataIndex];
+          const max = ctx.chart.scales.y.max;
+          return value < max * 0.15 ? "start" : "center";
+        }
+      }
+    },
+    scales: {
+      x: { stacked: true },
+      y: { 
+        stacked: true,
+        beginAtZero: true,
+        grace: "20%", 
+        title: { display: true, text: "Number of Projects" }
+      }
+    }
+  },
+  plugins: [ChartDataLabels]
+});
+
+
+      // ---- Cleanup for On-Hold ----
+// onholdChart.data.datasets = sanitizeChartData(onholdChart.data.labels, onholdChart.data.datasets);
+// onholdChart.data.labels = removeEmptyLabels(onholdChart.data.labels, onholdChart.data.datasets);
+// onholdChart.options.plugins.datalabels.formatter = value => formatCrores(value);
+// onholdChart.update();
+
 
       function ongoingClickHandler(evt, elements) {
     if (!elements.length) return;
@@ -688,6 +588,13 @@ function attachFullscreenToChart(canvasId) {
     },
     plugins: [ChartDataLabels]
 });
+
+// ---- Cleanup for Ongoing ----
+// ongoingChart.data.datasets = sanitizeChartData(ongoingChart.data.labels, ongoingChart.data.datasets);
+// ongoingChart.data.labels = removeEmptyLabels(ongoingChart.data.labels, ongoingChart.data.datasets);
+// ongoingChart.options.plugins.datalabels.formatter = value => formatCrores(value);
+// ongoingChart.update();
+
  
       document.getElementById("closeTableBtn").onclick = () => {
         document.getElementById("projectTableContainer").style.display = "none";
@@ -780,6 +687,12 @@ function attachFullscreenToChart(canvasId) {
   },
   plugins: [ChartDataLabels, multiLevelLabelPlugin] // ✅ include datalabel plugin here
 });
+
+// ---- Cleanup for Zone-Project Type ----
+zoneProjectTypeChart.data.datasets = sanitizeChartData(zoneProjectTypeChart.data.labels, zoneProjectTypeChart.data.datasets);
+zoneProjectTypeChart.data.labels = removeEmptyLabels(zoneProjectTypeChart.data.labels, zoneProjectTypeChart.data.datasets);
+zoneProjectTypeChart.update();
+
  
       // when dropdown value changes
  
@@ -906,33 +819,116 @@ function attachFullscreenToChart(canvasId) {
         ongoingChart.data.datasets[0].data = ongoingCounts;
         ongoingChart.update();
       }
- 
- 
-      // backBtn.onclick = () => { selectedZone = null; updateHighlight(); backBtn.style.display = "none"; };
 
-      // backBtn.onclick = () => { selectedZone = null; updateHighlight(); backBtn.style.display = "none"; };
-
-// ---- Enable Fullscreen for Each Chart ----
-
-attachFullscreenToChart("donutChart");
-attachFullscreenToChart("stackedBarChart");
-attachFullscreenToChart("onholdChart");
-attachFullscreenToChart("notStartedChart");
-attachFullscreenToChart("ongoingChart");
-attachFullscreenToChart("clusteredColumnChart");
-attachFullscreenToChart("zoneProjectTypeChart");
-
-
-
-} // <-- end of loadCharts()
+} 
 
  
     
  
-    loadCharts();
+    loadCharts().then(() => {
+  enableModalChart("donutChart", "Total Number of Projects");
+  enableModalChart("stackedBarChart", "Budget vs Expenditure");
+  enableModalChart("onholdChart", "On-Hold Projects");
+  enableModalChart("notStartedChart", "Not Started Projects");
+  enableModalChart("ongoingChart", "Ongoing Projects");
+  enableModalChart("clusteredColumnChart", "Ongoing Projects Budget");
+  enableModalChart("zoneProjectTypeChart", "Balance / Expenditure / Budget by Type");
+});
 
-    
-   
+function cleanOptions(obj) {
+  const copy = {};
+  for (const key in obj) {
+    const value = obj[key];
+
+    // Skip functions (like formatter, tooltip callbacks, etc)
+    if (typeof value === "function") continue;
+
+    // Recurse nested objects
+    if (typeof value === "object" && value !== null) {
+      copy[key] = cleanOptions(value);
+      continue;
+    }
+
+    copy[key] = value;
+  }
+  return copy;
+}
+
+function cloneOptions(obj, seen = new WeakSet()) {
+  if (obj === null || typeof obj !== "object") return obj;
+  if (seen.has(obj)) return undefined;
+
+  seen.add(obj);
+
+  const clone = Array.isArray(obj) ? [] : {};
+
+  for (const key in obj) {
+    const value = obj[key];
+
+    // skip functions and DOM/Chart instances
+    if (typeof value === "function") continue;
+    if (value instanceof HTMLElement || value instanceof Chart) continue;
+
+    clone[key] = cloneOptions(value, seen);
+  }
+  return clone;
+}
+
+
+    let modalChartInstance = null;
+
+function enableModalChart(chartId, title) {
+  const canvas = document.getElementById(chartId);
+  canvas.style.cursor = "pointer";
+
+  canvas.addEventListener("click", () => {
+    const original = window[chartId];
+    if (!original) return;
+
+    document.getElementById("modalTitle").innerText = title;
+    document.getElementById("projectTableContainer").style.display = "flex";
+
+    if (modalChartInstance) {
+      modalChartInstance.destroy();
+      modalChartInstance = null;
+    }
+
+    const modalCanvas = document.getElementById("modalChart");
+
+    const cloneData = {
+      labels: [...original.data.labels],
+      datasets: original.data.datasets.map(ds => ({
+        ...ds,
+        data: ds.data.map(v => Number(v))
+      }))
+    };
+
+    // 🔥 Safe cloning (NO JSON.stringify)
+    const cleanedOptions = cloneOptions(original.options);
+
+    modalChartInstance = new Chart(modalCanvas, {
+      type: original.config.type,
+      data: cloneData,
+      options: cleanedOptions,
+      plugins: [ChartDataLabels]
+    });
+
+    // Re-attach click handler if exists
+    if (original.options && typeof original.options.onClick === "function") {
+      modalChartInstance.options.onClick = function (evt, elements) {
+        if (!elements.length) return;
+
+        original.options.onClick(evt, elements);
+
+        document.getElementById("projectTableContainer").style.display = "flex"; 
+      };
+    }
+
+    modalChartInstance.update();
+  });
+}
+
+
     // Fetch header from header.html
     fetch("header.html")
   .then(res => res.text())
@@ -951,12 +947,6 @@ attachFullscreenToChart("zoneProjectTypeChart");
         content.classList.toggle("sidebar-open", isOpen);
       });
     }
-
-    window.addEventListener("message", (event) => {
-  if (event.data.action === "closeFullscreen") {
-    document.getElementById("fullscreenIframeWrapper").style.display = "none";
-  }
-});
 
   });
  
