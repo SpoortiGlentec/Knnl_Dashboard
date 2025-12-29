@@ -31,52 +31,52 @@
       <option>Loading...</option>
     </select>
   </div> -->
-<div id="content-wrapper">
-  <div class="dashboard">
-    <div class="card">
-      <h3>Field-wise Total Expenditure</h3>
-      <div class="chart-container"><canvas id="fieldPie"></canvas></div>
-    </div>
+  <div id="content-wrapper">
+    <div class="dashboard">
+      <div class="card">
+        <h3>Field-wise Total Expenditure</h3>
+        <div class="chart-container"><canvas id="fieldPie"></canvas></div>
+      </div>
 
-    <div class="card">
-      <h3>Field-wise Expenditure</h3>
-      <div class="chart-container"><canvas id="fieldBar"></canvas></div>
-    </div>
+      <div class="card">
+        <h3>Field-wise Expenditure</h3>
+        <div class="chart-container"><canvas id="fieldBar"></canvas></div>
+      </div>
 
-    <div class="card">
-      <h3>Year-wise Expenditure</h3>
-      <div class="chart-container"><canvas id="yearBar"></canvas></div>
-    </div>
+      <div class="card">
+        <h3>Year-wise Expenditure</h3>
+        <div class="chart-container"><canvas id="yearBar"></canvas></div>
+      </div>
 
-    <div class="card">
-  <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
-    <h3 id="monthTitle">Month-wise Expenditure</h3>
+      <div class="card">
+        <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
+          <h3 id="monthTitle">Month-wise Expenditure</h3>
 
-    <select id="yearSelect" 
+          <select id="yearSelect"
             style="padding:6px 10px; font-size:14px; border-radius:6px; border:1px solid #ccc; min-width:120px;">
-      <option>Loading...</option>
-    </select>
-  </div>
+            <option>Loading...</option>
+          </select>
+        </div>
 
-  <div class="chart-container">
-    <canvas id="monthBar"></canvas>
-  </div>
-</div>
-<div id="chartModal" class="chart-modal">
-  <div class="chart-modal-content">
-    
-    <button id="closeModalBtn" class="close-btn">✕</button>
-    <h3 id="modalChartTitle"></h3>
+        <div class="chart-container">
+          <canvas id="monthBar"></canvas>
+        </div>
+      </div>
+      <div id="chartModal" class="chart-modal">
+        <div class="chart-modal-content">
 
-    <div class="modal-canvas-wrapper">
-      <canvas id="modalChart"></canvas>
+          <button id="closeModalBtn" class="close-btn">✕</button>
+          <h3 id="modalChartTitle"></h3>
+
+          <div class="modal-canvas-wrapper">
+            <canvas id="modalChart"></canvas>
+          </div>
+
+        </div>
+      </div>
     </div>
+  </div>
 
-  </div>
-</div>
-  </div>
-  </div>
-  
 
   <script>
     let charts = {};
@@ -145,7 +145,7 @@
           responsive: true,
           maintainAspectRatio: false,
           layout: {
-            padding: { top: 40, bottom: 40, left: 40 }
+            padding: { top: 20, bottom: 40, left: 40 }
           },
           plugins: {
             legend: {
@@ -154,17 +154,29 @@
               labels: { boxWidth: 8, font: { size: 11 } }
             },
             datalabels: {
-              formatter: (value) => value.toLocaleString("en-IN")+"Cr",
-              anchor: "end",
-              align: "end",
-              offset: 12,
+              formatter: (value) => {
+
+                if (value < 22000) return "";
+
+                return value.toLocaleString("en-IN") + " Cr";
+              },
+
+              rotation: 90,
+              anchor: "center",
+              align: "center",
+              offset: 0,
+
+              clip: false,
               clamp: false,
+
               color: "#000",
-              backgroundColor: function (ctx) { return ctx.dataset.backgroundColor[ctx.dataIndex]; },
-              borderRadius: 4,
-              padding: 2,
-              font: { size: 10, weight: "bold" }
+              font: {
+                size: 9,
+                weight: "bold"
+              }
             }
+
+
           },
         },
         plugins: [ChartDataLabels]
@@ -193,7 +205,7 @@
               rotation: 90,
               color: '#000',
               font: { size: 12, weight: 'bold' },
-              formatter: (value) => value.toLocaleString("en-IN")+"Cr"
+              formatter: (value) => value.toLocaleString("en-IN") + "Cr"
             }
           },
           layout: { padding: { top: 70 } },
@@ -231,9 +243,10 @@
               align: 'top',
               offset: -6,
               rotation: 50,
+              clip: false,
               color: '#000',
               font: { size: 10, weight: "bold" },
-              formatter: (value) => value.toLocaleString("en-IN")+"Cr"
+              formatter: (value) => value.toLocaleString("en-IN") + "Cr"
             }
           },
           scales: {
@@ -315,9 +328,9 @@
       const categories = [...new Set(filtered.map(r => r.roman_heading))];
 
       // Auto colors for each category
-    const colors = categories.map((_, i) =>
-  `hsl(${(i * 360) / categories.length}, 70%, 80%)`
-);
+      const colors = categories.map((_, i) =>
+        `hsl(${(i * 360) / categories.length}, 70%, 80%)`
+      );
 
 
       // Build stacked datasets
@@ -366,6 +379,7 @@
             datalabels: {
               anchor: "center",
               align: "center",
+              clip: false,
               offset: 4,
               color: "#000",
               font: { size: 10, weight: "bold" },
@@ -386,7 +400,7 @@
                 }
 
                 // Show formatted category value
-                return value.toLocaleString("en-IN")+"Cr";
+                return value.toLocaleString("en-IN") + "Cr";
               }
             }
 
@@ -429,90 +443,110 @@
 
     // Load dynamic header from external file (optional)
     fetch("header.html")
-  .then(res => res.text())
-  .then(html => {
-    document.getElementById("header-placeholder").innerHTML = html;
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById("header-placeholder").innerHTML = html;
 
-    // 🔥 After header loads, sidebar toggle finally works
-    const menuBtn = document.getElementById("menu-btn");
-    const sidebar = document.getElementById("sidebar");
-    const content = document.getElementById("content-wrapper");
+        // 🔥 After header loads, sidebar toggle finally works
+        const menuBtn = document.getElementById("menu-btn");
+        const sidebar = document.getElementById("sidebar");
+        const content = document.getElementById("content-wrapper");
 
-    if (menuBtn) {
-      menuBtn.addEventListener("click", () => {
-        isOpen = !isOpen;
-        sidebar.style.right = isOpen ? "0px" : "-240px";
-        content.classList.toggle("sidebar-open", isOpen);
+        if (menuBtn) {
+          menuBtn.addEventListener("click", () => {
+            isOpen = !isOpen;
+            sidebar.style.right = isOpen ? "0px" : "-240px";
+            content.classList.toggle("sidebar-open", isOpen);
+          });
+        }
+
+        window.addEventListener("message", (event) => {
+          if (event.data.action === "closeFullscreen") {
+            document.getElementById("fullscreenIframeWrapper").style.display = "none";
+          }
+        });
       });
-    }
 
-    window.addEventListener("message", (event) => {
-  if (event.data.action === "closeFullscreen") {
-    document.getElementById("fullscreenIframeWrapper").style.display = "none";
-  }
-});
-  });
+    let modalChartInstance = null;
 
-  let modalChartInstance = null;
+    function enableModal(chartId, title) {
+      const canvas = document.getElementById(chartId);
+      if (!canvas) return;
 
-function enableModal(chartId, title) {
-  const canvas = document.getElementById(chartId);
-  if (!canvas) return;
+      canvas.style.cursor = "pointer";
 
-  canvas.style.cursor = "pointer";
+      canvas.onclick = () => {
+        const original = window[chartId];
+        if (!original) return;
 
-  canvas.onclick = () => {
-    const original = window[chartId];
-    if (!original) return;
+        document.getElementById("chartModal").style.display = "flex";
+        document.getElementById("modalChartTitle").innerText = title;
 
-    document.getElementById("chartModal").style.display = "flex";
-    document.getElementById("modalChartTitle").innerText = title;
+        if (modalChartInstance) modalChartInstance.destroy();
 
-    if (modalChartInstance) modalChartInstance.destroy();
+        const modalCanvas = document.getElementById("modalChart");
+        modalCanvas.getContext("2d").canvas._chart = undefined;
 
-    const modalCanvas = document.getElementById("modalChart");
-    modalCanvas.getContext("2d").canvas._chart = undefined;
+        const cloneData = {
+          labels: [...original.data.labels],
+          datasets: original.data.datasets.map(ds => ({
+            label: ds.label,
+            data: ds.data.map(v => Number(v)),
+            backgroundColor: ds.backgroundColor,
+            borderWidth: ds.borderWidth || 1
+          }))
+        };
 
-    const cloneData = {
-      labels: [...original.data.labels],
-      datasets: original.data.datasets.map(ds => ({
-        label: ds.label,
-        data: ds.data.map(v => Number(v)),
-        backgroundColor: ds.backgroundColor,
-        borderWidth: ds.borderWidth || 1
-      }))
+        const clonedOptions = JSON.parse(JSON.stringify(original.config.options));
+        if (clonedOptions.plugins && clonedOptions.plugins.datalabels) {
+
+  // ✅ ONLY for fieldPie
+  if (chartId === "fieldPie") {
+    clonedOptions.plugins.datalabels.formatter = (value) => {
+      if (value < 22000) return "";
+      return value.toLocaleString("en-IN") + " Cr";
     };
+  }
 
-    const clonedOptions = JSON.parse(JSON.stringify(original.config.options));
-    clonedOptions.responsive = true;
-    clonedOptions.maintainAspectRatio = false;
-    clonedOptions.animation = false;
-
-    modalChartInstance = new Chart(modalCanvas, {
-      type: original.config.type,
-      data: cloneData,
-      options: clonedOptions,
-      plugins: [ChartDataLabels]
-    });
-
-    setTimeout(() => modalChartInstance.resize(), 150);
-  };
+  // ✅ ALL OTHER CHARTS
+  else {
+    clonedOptions.plugins.datalabels.formatter = (value) => {
+      return value.toLocaleString("en-IN") + " Cr";
+    };
+  }
 }
 
-document.getElementById("closeModalBtn").onclick = () => {
-  document.getElementById("chartModal").style.display = "none";
-};
 
-  
+
+        clonedOptions.responsive = true;
+        clonedOptions.maintainAspectRatio = false;
+        clonedOptions.animation = false;
+
+        modalChartInstance = new Chart(modalCanvas, {
+          type: original.config.type,
+          data: cloneData,
+          options: clonedOptions,
+          plugins: [ChartDataLabels]
+        });
+
+        setTimeout(() => modalChartInstance.resize(), 150);
+      };
+    }
+
+    document.getElementById("closeModalBtn").onclick = () => {
+      document.getElementById("chartModal").style.display = "none";
+    };
+
+
 
     // start
     loadData();
     setTimeout(() => {
-  enableModal("fieldPie", "Field-wise Total Expenditure");
-  enableModal("fieldBar", "Field-wise Expenditure");
-  enableModal("yearBar", "Year-wise Expenditure");
-  enableModal("monthBar", "Month-wise Expenditure");
-}, 800);
+      enableModal("fieldPie", "Field-wise Total Expenditure");
+      enableModal("fieldBar", "Field-wise Expenditure");
+      enableModal("yearBar", "Year-wise Expenditure");
+      enableModal("monthBar", "Month-wise Expenditure");
+    }, 800);
 
   </script>
 
