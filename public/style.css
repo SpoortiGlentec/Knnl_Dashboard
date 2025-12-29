@@ -998,7 +998,7 @@ body.year-finance-page select {
 body.year-finance-page .dashboard {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(620px, 1fr));
-  gap: 30px;
+  gap: 15px;
   justify-items: stretch;
   align-items: stretch;
   width: 100%;
