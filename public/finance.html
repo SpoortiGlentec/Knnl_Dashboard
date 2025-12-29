@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -9,9 +8,6 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
   <link rel="stylesheet" href="style.css" />
-
-  
-
 </head>
 
 <body class="finance-page">
@@ -25,11 +21,11 @@
   height:100vh;
   background:white;
   z-index:999999;">
-  <iframe id="fullscreenIframe" style="width:100%; height:100%; border:none;"></iframe>
-</div>
+    <iframe id="fullscreenIframe" style="width:100%; height:100%; border:none;"></iframe>
+  </div>
 
-    <div id="header-placeholder"></div>
-    <div id="sidebar" class="sidebar">
+  <div id="header-placeholder"></div>
+  <div id="sidebar" class="sidebar">
     <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
     <a href="./WaterReserviors.html">Water Reservoirs</a>
     <a href="./lift_irrigation.html">Lift Irrigation</a>
@@ -39,354 +35,380 @@
     <a href="./finance_year_data.html">Yearly Finance</a>
   </div>
   <div id="content-wrapper">
-  <header>
+    <header>
 
-    <h2>Asset Management Financial Dashboard</h2>
-  </header>
+      <h2>Asset Management Financial Dashboard</h2>
+    </header>
 
-  <div class="controls">
-   
-    <label for="zoneSelect">Zone:</label>
-    <select id="zoneSelect">
-      <option value="all">All Zones</option>
-    </select>
-    <label for="categorySelect">Category:</label>
-    <select id="categorySelect">
-      <option value="all">All Categories</option>
-    </select>
+    <div class="controls">
+
+      <label for="zoneSelect">Zone:</label>
+      <select id="zoneSelect">
+        <option value="all">All Zones</option>
+      </select>
+      <label for="categorySelect">Category:</label>
+      <select id="categorySelect">
+        <option value="all">All Categories</option>
+      </select>
+    </div>
+
+    <div class="dashboard">
+      <div class="card">
+        <h3>Count of Assets (by Zone)</h3>
+        <div class="chart-container"><canvas id="zonePie"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h3>Zone-wise Total Cost & DepAmt <span style="font-size:12px; color:#666;">(Amount in 100Cr)</span></h3>
+        <div class="chart-container"><canvas id="zoneCostBar"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h3>Zone-wise Cost Distribution <span style="font-size:12px; color:#666;">(Amount in 100Cr)</span></h3>
+
+        <div class="chart-container"><canvas id="categoryBar"></canvas></div>
+      </div>
+
+      <div class="card">
+        <h3>Category-wise Zone Cost Distribution <span style="font-size:12px; color:#666;">(Amount in 100Cr)</span></h3>
+        <div class="chart-container"><canvas id="zoneBar"></canvas></div>
+      </div>
+
+      <div id="chartModal" class="chart-modal">
+        <div class="chart-modal-content">
+
+          <button id="closeModalBtn" class="close-btn">✕</button>
+          <h3 id="modalChartTitle"></h3>
+
+          <div class="modal-canvas-wrapper">
+            <canvas id="modalChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
-  <div class="dashboard">
-    <div class="card">
-      <h3>Count of Assets (by Zone)</h3>
-      <div class="chart-container"><canvas id="zonePie"></canvas></div>
-    </div>
-
-    <div class="card">
-      <h3>Zone-wise Total Cost & DepAmt</h3>
-      <div class="chart-container"><canvas id="zoneCostBar"></canvas></div>
-    </div>
-
-    <div class="card">
-      <h3>Category-wise Cost Distribution <span style="font-size:12px; color:#666;">(Amount in Cr)</span></h3>
-
-      <div class="chart-container"><canvas id="categoryBar"></canvas></div>
-    </div>
-
-    <div class="card">
-      <h3>Category-wise Zone Cost Distribution <span style="font-size:12px; color:#666;">(Amount in Cr)</span></h3>
-      <div class="chart-container"><canvas id="zoneBar"></canvas></div>
-    </div>
-
-    <div id="chartModal" class="chart-modal">
-  <div class="chart-modal-content">
-
-    <button id="closeModalBtn" class="close-btn">✕</button>
-    <h3 id="modalChartTitle"></h3>
-
-    <div class="modal-canvas-wrapper">
-      <canvas id="modalChart"></canvas>
-    </div>
-  </div>
-</div>
-  </div>
-
-  </div>
-
-<script>
-  let fullData = [];
-  let isOpen = false;
-  let currentFilters = { zone: "all", category: "all" };
-  let drillStack = [];
-  
-
-  async function loadData() {
-    const res = await fetch("http://localhost:3001/api/financial_data");
-    fullData = await res.json();
-
-    populateFilters();
-    renderCharts("all", "all");
-  }
-
-  function populateFilters() {
-    const zones = [...new Set(fullData.map(d => d.ZONE || "Unknown"))].sort();
-    const categories = [...new Set(fullData.map(d => d["Main category"] || "Others"))].sort();
-    const zoneSelect = document.getElementById("zoneSelect");
-  const categorySelect = document.getElementById("categorySelect");
-    zones.forEach(z => {
-      const opt = document.createElement("option");
-      opt.value = z;
-      opt.textContent = z;
-      zoneSelect.appendChild(opt);
-    });
-
-    categories.forEach(c => {
-      const opt = document.createElement("option");
-      opt.value = c;
-      opt.textContent = c;
-      categorySelect.appendChild(opt);
-    });
-
-    zoneSelect.addEventListener("change", updateFilters);
-    categorySelect.addEventListener("change", updateFilters);
-    
-  }
-
-  
+  <script>
+    let fullData = [];
+    let isOpen = false;
+    let currentFilters = { zone: "all", category: "all" };
+    let drillStack = [];
 
 
-  function updateFilters() {
-    destroyCharts();
-  const zoneSelect = document.getElementById("zoneSelect");
-  const categorySelect = document.getElementById("categorySelect");
+    async function loadData() {
+      const res = await fetch("http://localhost:3001/api/financial_data");
+      fullData = await res.json();
 
-  const zone = zoneSelect.value;
-  const category = categorySelect.value;
-
-  currentFilters = { zone, category };
-  smoothReRender(zone, category);
-}
-
-
-  let charts = {};
-
-  function destroyCharts() {
-  Object.keys(window).forEach(key => {
-    if (window[key] instanceof Chart) {
-      try { window[key].destroy(); } catch(e) {}
-      delete window[key];
+      populateFilters();
+      renderCharts("all", "all");
     }
-  });
-}
+
+    function populateFilters() {
+      const zones = [...new Set(fullData.map(d => d.ZONE || "Unknown"))].sort();
+      const categories = [...new Set(fullData.map(d => d["Main category"] || "Others"))].sort();
+      const zoneSelect = document.getElementById("zoneSelect");
+      const categorySelect = document.getElementById("categorySelect");
+      zones.forEach(z => {
+        const opt = document.createElement("option");
+        opt.value = z;
+        opt.textContent = z;
+        zoneSelect.appendChild(opt);
+      });
+
+      categories.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c;
+        opt.textContent = c;
+        categorySelect.appendChild(opt);
+      });
+
+      zoneSelect.addEventListener("change", updateFilters);
+      categorySelect.addEventListener("change", updateFilters);
+
+    }
 
 
-  // 🌀 Crossfade animation for smooth transitions
-  function smoothReRender(zone, category) {
-    const dash = document.querySelector(".dashboard");
-    dash.style.transition = "opacity 0.5s ease-in-out, transform 0.5s ease-in-out";
-    dash.style.opacity = "0.3";
-    dash.style.transform = "scale(0.99)";
 
-    // Re-render after short delay, keeping dashboard visible
-    setTimeout(() => {
-      renderCharts(zone, category);
-      // Fade back in smoothly
-      dash.style.opacity = "1";
-      dash.style.transform = "scale(1)";
-    }, 200);
-  }
 
-  function renderCharts(zone, category) {
-    destroyCharts();
+    function updateFilters() {
+      destroyCharts();
+      const zoneSelect = document.getElementById("zoneSelect");
+      const categorySelect = document.getElementById("categorySelect");
 
-    let data = [...fullData];
-    if (zone !== "all") data = data.filter(d => (d.ZONE || "Unknown") === zone);
-    if (category !== "all") data = data.filter(d => (d["Main category"] || "Others") === category);
-    if (data.length === 0) return;
+      const zone = zoneSelect.value;
+      const category = categorySelect.value;
 
-    const zoneCounts = {};
-    const zoneTotals = {};
+      currentFilters = { zone, category };
+      smoothReRender(zone, category);
+    }
 
-    data.forEach(d => {
-      const z = d.ZONE || "Unknown";
-      const cost = parseFloat(d.Cost || 0);
-      const dep = parseFloat(d.DepAmt || 0);
-      zoneCounts[z] = (zoneCounts[z] || 0) + 1;
-      if (!zoneTotals[z]) zoneTotals[z] = { cost: 0, depAmt: 0 };
-      zoneTotals[z].cost += cost;
-      zoneTotals[z].depAmt += dep;
-    });
 
-    const zones = Object.keys(zoneCounts);
-    const zoneCosts = zones.map(z => (zoneTotals[z].cost / 10000000).toFixed(2));
-    const zoneDepAmts = zones.map(z => (zoneTotals[z].depAmt / 10000000).toFixed(2));
+    let charts = {};
 
-    const chartAnimation = {
-      duration: 800,
-      easing: "easeInOutCubic"
-    };
+    function destroyCharts() {
+      Object.keys(window).forEach(key => {
+        if (window[key] instanceof Chart) {
+          try { window[key].destroy(); } catch (e) { }
+          delete window[key];
+        }
+      });
+    }
 
-    // PIE CHART — Zone Counts
-    
-    window["zonePie"] = new Chart(document.getElementById("zonePie"), {
-      type: "pie",
-      data: {
-        labels: zones,
-        datasets: [{
-          data: Object.values(zoneCounts),
-          backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"],
-          borderWidth: 1,
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: chartAnimation,
-        plugins: {
-          legend: { position: "right" },
-          datalabels: {
-            color: "#000",
-            font: { weight: "bold", size: 12 },
-            formatter: value => value
+
+    // 🌀 Crossfade animation for smooth transitions
+    function smoothReRender(zone, category) {
+      const dash = document.querySelector(".dashboard");
+      dash.style.transition = "opacity 0.5s ease-in-out, transform 0.5s ease-in-out";
+      dash.style.opacity = "0.3";
+      dash.style.transform = "scale(0.99)";
+
+      // Re-render after short delay, keeping dashboard visible
+      setTimeout(() => {
+        renderCharts(zone, category);
+        // Fade back in smoothly
+        dash.style.opacity = "1";
+        dash.style.transform = "scale(1)";
+      }, 200);
+    }
+
+    function renderCharts(zone, category) {
+      destroyCharts();
+
+      let data = [...fullData];
+      if (zone !== "all") data = data.filter(d => (d.ZONE || "Unknown") === zone);
+      if (category !== "all") data = data.filter(d => (d["Main category"] || "Others") === category);
+      if (data.length === 0) return;
+
+      const zoneCounts = {};
+      const zoneTotals = {};
+
+      data.forEach(d => {
+        const z = d.ZONE || "Unknown";
+        const cost = parseFloat(d.Cost || 0);
+        const dep = parseFloat(d.DepAmt || 0);
+        zoneCounts[z] = (zoneCounts[z] || 0) + 1;
+        if (!zoneTotals[z]) zoneTotals[z] = { cost: 0, depAmt: 0 };
+        zoneTotals[z].cost += cost;
+        zoneTotals[z].depAmt += dep;
+      });
+      const divnum = 1000000000;
+      const zones = Object.keys(zoneCounts);
+      const zoneCosts = zones.map(z => (zoneTotals[z].cost / divnum).toFixed(2));
+      const zoneDepAmts = zones.map(z => (zoneTotals[z].depAmt / divnum).toFixed(2));
+
+      const chartAnimation = {
+        duration: 800,
+        easing: "easeInOutCubic"
+      };
+
+      // PIE CHART — Zone Counts
+
+      window["zonePie"] = new Chart(document.getElementById("zonePie"), {
+        type: "pie",
+        data: {
+          labels: zones,
+          datasets: [{
+            data: Object.values(zoneCounts),
+            backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"],
+            borderWidth: 1,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: chartAnimation,
+          plugins: {
+            legend: { position: "right" },
+            datalabels: {
+              color: "#000",
+              font: { weight: "bold", size: 12 },
+              formatter: value => value
+            }
+          },
+          onClick: (e, elements) => {
+            if (elements.length > 0) {
+              const index = elements[0].index;
+              const selectedZone = zones[index];
+              drillDown("zone", selectedZone);
+            }
           }
         },
-        onClick: (e, elements) => {
-          if (elements.length > 0) {
-            const index = elements[0].index;
-            const selectedZone = zones[index];
-            drillDown("zone", selectedZone);
-          }
-        }
-      },
-      plugins: [ChartDataLabels]
-    });
+        plugins: [ChartDataLabels]
+      });
 
-    // BAR CHART — Zone Cost & DepAmt
-    window["zoneCostBar"] = new Chart(document.getElementById("zoneCostBar"), {
-      type: "bar",
-      data: {
-        labels: zones,
-        datasets: [
-          { label: "Total Cost (Cr)", data: zoneCosts, backgroundColor: "#36A2EB" },
-          { label: "Total DepAmt (Cr)", data: zoneDepAmts, backgroundColor: "#FF6384" }
-        ]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: chartAnimation,
-        plugins: {
-          legend: { position: "bottom" },
-          datalabels: {
-            anchor: 'end',
-            align: 'top',
-            color: '#000',
-            font: { weight: 'bold' },
-            formatter: v => v+"Cr"
-          }
+      // BAR CHART — Zone Cost & DepAmt
+      window["zoneCostBar"] = new Chart(document.getElementById("zoneCostBar"), {
+        type: "bar",
+        data: {
+          labels: zones,
+          datasets: [
+            { label: "Total Cost", data: zoneCosts, backgroundColor: "#36A2EB" },
+            { label: "Total DepAmt", data: zoneDepAmts, backgroundColor: "#FF6384" }
+          ]
         },
-        onClick: (e, elements) => {
-          if (elements.length > 0) {
-            const index = elements[0].index;
-            const selectedZone = zones[index];
-            drillDown("zone", selectedZone);
-          }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: chartAnimation,
+          plugins: {
+            legend: { position: "bottom" },
+            datalabels: {
+              anchor: 'end',
+              align: 'top',
+              color: '#000',
+              font: { size: '10px' },
+              formatter: v => v
+            }
+          },
+          onClick: (e, elements) => {
+            if (elements.length > 0) {
+              const index = elements[0].index;
+              const selectedZone = zones[index];
+              drillDown("zone", selectedZone);
+            }
+          },
+          scales: { y: { beginAtZero: true, title: { display: true, text: 'Amount (in 100Crores)' } } }
         },
-        scales: { y: { beginAtZero: true, title: { display: true, text: 'Amount (in Crores)' } } }
-      },
-      plugins: [ChartDataLabels]
-    });
+        plugins: [ChartDataLabels]
+      });
 
-    // CATEGORY-WISE STACKED BAR
-    const categoryZoneTotals = {};
-    data.forEach(d => {
-      const z = d.ZONE || "Unknown";
-      const c = d["Main category"] || "Others";
-      const cost = parseFloat(d.Cost || 0) / 10000000;
-      if (!categoryZoneTotals[z]) categoryZoneTotals[z] = {};
-      categoryZoneTotals[z][c] = (categoryZoneTotals[z][c] || 0) + cost;
-    });
+      // CATEGORY-WISE STACKED BAR
+      const categoryZoneTotals = {};
+      data.forEach(d => {
+        const z = d.ZONE || "Unknown";
+        const c = d["Main category"] || "Others";
+        const cost = Number((parseFloat(d.Cost || 0) / divnum).toFixed(2));
 
-    const zonesList = Object.keys(categoryZoneTotals);
-    const categoryList = [...new Set(data.map(d => d["Main category"] || "Others"))];
-    const colors = ["#36A2EB", "#FF6384", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#00B4D8", "#6A994E", "#EF476F"];
+        if (!categoryZoneTotals[z]) categoryZoneTotals[z] = {};
+        categoryZoneTotals[z][c] = (categoryZoneTotals[z][c] || 0) + cost;
+      });
 
-    const datasets = categoryList.map((cat, idx) => ({
-      label: cat,
-      data: zonesList.map(z => categoryZoneTotals[z][cat] || 0),
-      backgroundColor: colors[idx % colors.length]
-    }));
+      const zonesList = Object.keys(categoryZoneTotals);
+      const categoryList = [...new Set(data.map(d => d["Main category"] || "Others"))];
+      const colors = ["#36A2EB", "#FF6384", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40", "#00B4D8", "#6A994E", "#EF476F"];
 
-    window["categoryBar"] = new Chart(document.getElementById("categoryBar"), {
-      type: "bar",
-      data: { labels: zonesList, datasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        animation: chartAnimation,
-        plugins: {
-  legend: { position: "bottom" },
-  datalabels: {
-    anchor: 'center',
-    align: 'center',
-    color: '#000',
-    font: { weight: 'bold' },
-    formatter: v => v + " Cr"
-  }
-},
-        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
-        onClick: (e, elements) => {
-          if (elements.length > 0) {
-            const datasetIndex = elements[0].datasetIndex;
-            const category = datasets[datasetIndex].label;
-            drillDown("category", category);
+      const datasets = categoryList.map((cat, idx) => ({
+        label: cat,
+        data: zonesList.map(z => categoryZoneTotals[z][cat] || 0),
+        backgroundColor: colors[idx % colors.length]
+      }));
+
+      window["categoryBar"] = new Chart(document.getElementById("categoryBar"), {
+        type: "bar",
+        data: { labels: zonesList, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          animation: chartAnimation,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                boxWidth: 6,
+                boxHeight: 6,
+                font: { size: 10 }
+              }
+            }
+            ,
+            datalabels: {
+              anchor: 'center',
+              align: 'center',
+              color: '#000',
+              font: { size: '10px' },
+              formatter: v => {
+                if (v < 4.0) return "";
+                return v.toFixed(2)
+              }
+            }
+          },
+          scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Amount (in 100Crores)' } } },
+
+          onClick: (e, elements) => {
+            if (elements.length > 0) {
+              const datasetIndex = elements[0].datasetIndex;
+              const category = datasets[datasetIndex].label;
+              drillDown("category", category);
+            }
           }
-        }
-      }
-    });
 
-    // CATEGORY-WISE ZONE DISTRIBUTION
-    const categoryTotals = {};
-    data.forEach(d => {
-      const c = d["Main category"] || "Others";
-      const z = d.ZONE || "Unknown";
-      const cost = parseFloat(d.Cost || 0) / 10000000;
-      if (!categoryTotals[c]) categoryTotals[c] = {};
-      categoryTotals[c][z] = (categoryTotals[c][z] || 0) + cost;
-    });
+        },
+        plugins: [ChartDataLabels]
+      });
 
-    const zoneList = [...new Set(data.map(d => d.ZONE || "Unknown"))];
-    const zoneDatasets = zoneList.map((z, idx) => ({
-      label: z,
-      data: categoryList.map(c => categoryTotals[c][z] || 0),
-      backgroundColor: colors[idx % colors.length]
-    }));
+      // CATEGORY-WISE ZONE DISTRIBUTION
+      const categoryTotals = {};
+      data.forEach(d => {
+        const c = d["Main category"] || "Others";
+        const z = d.ZONE || "Unknown";
+        const cost = Number((parseFloat(d.Cost || 0) / divnum).toFixed(2));
+        if (!categoryTotals[c]) categoryTotals[c] = {};
+        categoryTotals[c][z] = (categoryTotals[c][z] || 0) + cost;
+      });
 
-    window["zoneBar"] = new Chart(document.getElementById("zoneBar"), {
-      type: "bar",
-      data: { labels: categoryList, datasets: zoneDatasets },
-      options: {
-        responsive: true,
-        maintainAspectRatio: true,
-        animation: chartAnimation,
-        plugins: {
-  legend: { position: "bottom" },
-  datalabels: {
-    anchor: 'center',
-    align: 'center',
-    color: '#000',
-    font: { weight: 'bold' },
-    formatter: v => v + " Cr"
-  }
-},
-        scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true } },
-        onClick: (e, elements) => {
-          if (elements.length > 0) {
-            const index = elements[0].index;
-            const category = categoryList[index];
-            drillDown("category", category);
+      const zoneList = [...new Set(data.map(d => d.ZONE || "Unknown"))];
+      const zoneDatasets = zoneList.map((z, idx) => ({
+        label: z,
+        data: categoryList.map(c => categoryTotals[c][z] || 0),
+        backgroundColor: colors[idx % colors.length]
+      }));
+
+      window["zoneBar"] = new Chart(document.getElementById("zoneBar"), {
+        type: "bar",
+        data: { labels: categoryList, datasets: zoneDatasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          animation: chartAnimation,
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                boxWidth: 6,
+                boxHeight: 6,
+                font: { size: 10 }
+              }
+            }
+            ,
+            datalabels: {
+              anchor: 'center',
+              align: 'center',
+              color: '#000',
+              font: { size: '10px' },
+              formatter: v => {
+                if (v < 5.0) return "";
+                return v.toFixed(2)
+              }
+            }
+          },
+          scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, title: { display: true, text: 'Amount (in 100Crores)' } } },
+          onClick: (e, elements) => {
+            if (elements.length > 0) {
+              const index = elements[0].index;
+              const category = categoryList[index];
+              drillDown("category", category);
+            }
           }
-        }
-      }
-    });
-  }
+        }, plugins: [ChartDataLabels]
+      });
+    }
 
-  function drillDown(type, value) {
-    drillStack.push({ ...currentFilters });
-    if (type === "zone") currentFilters.zone = value;
-    if (type === "category") currentFilters.category = value;
+    function drillDown(type, value) {
+      drillStack.push({ ...currentFilters });
+      if (type === "zone") currentFilters.zone = value;
+      if (type === "category") currentFilters.category = value;
 
-    smoothReRender(currentFilters.zone, currentFilters.category);
-    renderBackButton();
-  }
+      smoothReRender(currentFilters.zone, currentFilters.category);
+      renderBackButton();
+    }
 
-  function renderBackButton() {
-    let backBtn = document.getElementById("backButton");
-    if (!backBtn) {
-      backBtn = document.createElement("button");
-      backBtn.id = "backButton";
-      backBtn.textContent = "⬅ Back";
-      backBtn.style = `
+    function renderBackButton() {
+      let backBtn = document.getElementById("backButton");
+      if (!backBtn) {
+        backBtn = document.createElement("button");
+        backBtn.id = "backButton";
+        backBtn.textContent = "⬅ Back";
+        backBtn.style = `
         display:block; 
         margin:0 auto 20px auto; 
         background:#0d6efd;
@@ -397,96 +419,123 @@
         cursor:pointer;
         transition: all 0.3s ease;
       `;
-      backBtn.onmouseenter = () => backBtn.style.background = "#0b5ed7";
-      backBtn.onmouseleave = () => backBtn.style.background = "#0d6efd";
+        backBtn.onmouseenter = () => backBtn.style.background = "#0b5ed7";
+        backBtn.onmouseleave = () => backBtn.style.background = "#0d6efd";
 
-      backBtn.onclick = () => {
-        const prev = drillStack.pop();
-        if (prev) {
-          currentFilters = prev;
-          zoneSelect.value = prev.zone;
-          categorySelect.value = prev.category;
-          smoothReRender(prev.zone, prev.category);
-          if (drillStack.length === 0) backBtn.remove();
-        }
-      };
-      document.querySelector("header").after(backBtn);
+        backBtn.onclick = () => {
+          const prev = drillStack.pop();
+          if (prev) {
+            currentFilters = prev;
+            zoneSelect.value = prev.zone;
+            categorySelect.value = prev.category;
+            smoothReRender(prev.zone, prev.category);
+            if (drillStack.length === 0) backBtn.remove();
+          }
+        };
+        document.querySelector("header").after(backBtn);
+      }
     }
-  }
 
-  let modalChartInstance = null;
+    let modalChartInstance = null;
 
-function enableModal(chartId, title) {
-  const canvas = document.getElementById(chartId);
-  if (!canvas) return;
+    function enableModal(chartId, title) {
+      const canvas = document.getElementById(chartId);
+      if (!canvas) return;
 
-  canvas.style.cursor = "pointer";
+      canvas.style.cursor = "pointer";
 
-  canvas.onclick = () => {
-    const originalChart = window[chartId];
-    if (!originalChart) return;
+      canvas.ondblclick = () => {
+        const originalChart = window[chartId];
+        if (!originalChart) return;
 
-    document.getElementById("chartModal").style.display = "flex";
-    document.getElementById("modalChartTitle").innerText = title;
+        document.getElementById("chartModal").style.display = "flex";
+        document.getElementById("modalChartTitle").innerText = title;
 
-    // Destroy previous modal chart if exists
-    if (modalChartInstance) modalChartInstance.destroy();
+        // Destroy previous modal chart if exists
+        if (modalChartInstance) modalChartInstance.destroy();
 
-    const modalCanvas = document.getElementById("modalChart");
-    modalCanvas.getContext("2d").canvas._chart = undefined;
+        const modalCanvas = document.getElementById("modalChart");
+        modalCanvas.getContext("2d").canvas._chart = undefined;
 
-    // Clone clean chart config
-    const clonedConfig = {
-      type: originalChart.config.type,
-      data: JSON.parse(JSON.stringify(originalChart.config.data)),
-      options: JSON.parse(JSON.stringify(originalChart.config.options)),
-      plugins: [ChartDataLabels]
+        // Clone clean chart config
+        const clonedConfig = {
+          type: originalChart.config.type,
+          data: JSON.parse(JSON.stringify(originalChart.config.data)),
+          options: JSON.parse(JSON.stringify(originalChart.config.options)),
+          plugins: [ChartDataLabels]
+        };
+
+        clonedConfig.options.animation = false;
+        clonedConfig.options.responsive = true;
+        clonedConfig.options.maintainAspectRatio = false;
+        clonedConfig.options.plugins.datalabels = {
+          color: "#000",
+          anchor: "center",
+          align: "center",
+          font: { size: 10, weight: "bold" },
+          formatter: v => {
+            const num = Number(v);
+            if (!num) return "";
+            return num.toFixed(2);
+          }
+
+        };
+        modalChartInstance = new Chart(modalCanvas, clonedConfig);
+        setTimeout(() => modalChartInstance.resize(), 100);
+      };
+    }
+
+    // Close Modal
+    document.getElementById("closeModalBtn").onclick = function () {
+      document.getElementById("chartModal").style.display = "none";
     };
 
-    clonedConfig.options.animation = false;
-    clonedConfig.options.responsive = true;
-    clonedConfig.options.maintainAspectRatio = false;
 
-    modalChartInstance = new Chart(modalCanvas, clonedConfig);
+    fetch("header.html")
+      .then(res => res.text())
+      .then(html => {
+        document.getElementById("header-placeholder").innerHTML = html;
 
-    setTimeout(() => modalChartInstance.resize(), 100);
-  };
-}
+       let isOpen = false;
 
-// Close Modal
-document.getElementById("closeModalBtn").onclick = function () {
-  document.getElementById("chartModal").style.display = "none";
-};
+        const menuBtn = document.getElementById("menu-btn");
+        const sidebar = document.getElementById("sidebar");
+        const content = document.getElementById("content-wrapper");
+
+        // Toggle sidebar using the menu button
+        menuBtn.addEventListener("click", (event) => {
+          event.stopPropagation(); // Prevent click from closing it immediately
+          isOpen = !isOpen;
+          sidebar.style.right = isOpen ? "0px" : "-240px";
+          content.classList.toggle("sidebar-open", isOpen);
+        });
+
+        // Close sidebar when clicking anywhere outside
+        document.addEventListener("click", (event) => {
+          if (
+            isOpen &&
+            !sidebar.contains(event.target) &&
+            !menuBtn.contains(event.target)
+          ) {
+            isOpen = false;
+            sidebar.style.right = "-240px";
+            content.classList.remove("sidebar-open");
+          }
+        });
 
 
-   fetch("header.html")
-  .then(res => res.text())
-  .then(html => {
-    document.getElementById("header-placeholder").innerHTML = html;
+        // ⬇️ PUT IT HERE ⬇️
+        loadData();
+        setTimeout(() => {
+          enableModal("zonePie", "Count of Assets (by Zone)");
+          enableModal("zoneCostBar", "Zone-wise Total Cost & Depreciation");
+          enableModal("categoryBar", "Category-wise Cost Distribution");
+          enableModal("zoneBar", "Category-wise Zone Cost Distribution");
+        }, 900);
 
-    const menuBtn = document.getElementById("menu-btn");
-    const sidebar = document.getElementById("sidebar");
-    const content = document.getElementById("content-wrapper");
-
-    if (menuBtn) {
-      menuBtn.addEventListener("click", () => {
-        isOpen = !isOpen;
-        sidebar.style.right = isOpen ? "0px" : "-240px";
-        content.classList.toggle("sidebar-open", isOpen);
       });
-    }
 
-    // ⬇️ PUT IT HERE ⬇️
-    loadData();
-    setTimeout(() => {
-  enableModal("zonePie", "Count of Assets (by Zone)");
-  enableModal("zoneCostBar", "Zone-wise Total Cost & Depreciation");
-  enableModal("categoryBar", "Category-wise Cost Distribution");
-  enableModal("zoneBar", "Category-wise Zone Cost Distribution");
-}, 900);
-
-});
-
-</script>
+  </script>
 </body>
+
 </html>

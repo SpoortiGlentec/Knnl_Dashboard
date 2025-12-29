@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Karnataka Reservoir Dashboard</title>
@@ -15,175 +16,174 @@
 
 <body class="reservoirs-page">
   <div id="header-placeholder"></div>
-
   <div id="sidebar" class="sidebar">
-  <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
-  <a href="./WaterReserviors.html">Water Reservoirs</a>
-  <a href="./lift_irrigation.html">Lift Irrigation</a>
-  <a href="./finance.html">Finance</a>
-  <a href="./project_dash.html">Projects</a>
-  <a href="./land_data.html">Land</a>
-  <a href="./finance_year_data.html">Yearly Finance</a>
+    <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
+    <a href="./WaterReserviors.html">Water Reservoirs</a>
+    <a href="./lift_irrigation.html">Lift Irrigation</a>
+    <a href="./finance.html">Finance</a>
+    <a href="./project_dash.html">Projects</a>
+    <a href="./land_data.html">Land</a>
+    <a href="./finance_year_data.html">Yearly Finance</a>
   </div>
 
-<div id="content-wrapper">
-  <h2>Karnataka Reservoir Dashboard</h2>
-  <div id="selectedDam"></div>
-  <div id="chartActions">
-  <button id="resetButton" onclick="resetDashboard()">🔄 Reset View</button>
-  <div id="chartNav">
-    <button onclick="scrollToChart('reservoirLevelChart')">🎯 Reservoir Level</button>
-    <button onclick="scrollToChart('flowChart')">💧 Inflow vs Outflow</button>
-    <button onclick="scrollToChart('storageChart')">📦 Gross vs Live</button>
-    <button onclick="scrollToChart('cumulativeFlowChart')">📊 Cumulative Flow</button>
-    <button onclick="scrollToChart('liveStorageChart')">📈 Live Storage</button>
-    <button onclick="scrollToChart('grossStorageChart')">🏗 Design vs Gross</button>
-    <button onclick="scrollToChart('reservoirChart')">📌 Storage %</button>
-  </div>
-  </div>
-
-  <div class="main-container">
-    <!-- Left: Map -->
-    <div id="map-container">
-      <div id="map"></div>
-    </div>
-
-    <!-- Right: Charts -->
-    <div id="charts-scroll">
-      <div class="chart-box">
-        <h3>Reservoir Level Comparison</h3>
-       <div class="donut-container">
-  <canvas id="reservoirLevelChart"></canvas>
-</div>
-
-      </div>
-
-      <div class="chart-box">
-        <h3>Inflow vs Outflow</h3>
-        <canvas id="flowChart"></canvas>
-      </div>
-
-      <div class="chart-box">
-        <h3>Gross vs Live Storage</h3>
-        <canvas id="storageChart"></canvas>
-      </div>
-
-      <div class="chart-box">
-        <h3>Cumulative Inflow vs Outflow</h3>
-        <canvas id="cumulativeFlowChart"></canvas>
-      </div>
-
-      <div class="chart-box">
-        <h3>Live Storage Comparison</h3>
-        <canvas id="liveStorageChart"></canvas>
-      </div>
-
-      <div class="chart-box">
-        <h3>Gross Storage vs Design Capacity</h3>
-        <canvas id="grossStorageChart"></canvas>
-      </div>
-
-      <div class="chart-box">
-        <h3>Reservoir Storage Percentage</h3>
-        <canvas id="reservoirChart"></canvas>
+  <div id="content-wrapper">
+    <h2>Karnataka Reservoir Dashboard</h2>
+    <div id="selectedDam"></div>
+    <div id="chartActions">
+      <button id="resetButton" onclick="resetDashboard()">🔄 Reset View</button>
+      <div id="chartNav">
+        <button onclick="scrollToChart('reservoirLevelChart')">🎯 Reservoir Level</button>
+        <button onclick="scrollToChart('flowChart')">💧 Inflow vs Outflow</button>
+        <button onclick="scrollToChart('storageChart')">📦 Gross vs Live</button>
+        <button onclick="scrollToChart('cumulativeFlowChart')">📊 Cumulative Flow</button>
+        <button onclick="scrollToChart('liveStorageChart')">📈 Live Storage</button>
+        <button onclick="scrollToChart('grossStorageChart')">🏗 Design vs Gross</button>
+        <button onclick="scrollToChart('reservoirChart')">📌 Storage %</button>
       </div>
     </div>
 
-    <div id="chartModal" class="chart-modal">
-  <div class="chart-modal-content">
+    <div class="main-container">
+      <!-- Left: Map -->
+      <div id="map-container">
+        <div id="map"></div>
+      </div>
 
-    <button id="closeModalBtn" class="close-btn">✕ Close</button>
-    <h3 id="modalChartTitle"></h3>
+      <!-- Right: Charts -->
+      <div id="charts-scroll">
+        <div class="chart-box">
+          <h3>Reservoir Level Comparison</h3>
+          <div class="donut-container">
+            <canvas id="reservoirLevelChart"></canvas>
+          </div>
 
-    <div class="modal-canvas-wrapper">
-      <canvas id="modalChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h3>Inflow vs Outflow</h3>
+          <canvas id="flowChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h3>Gross vs Live Storage</h3>
+          <canvas id="storageChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h3>Cumulative Inflow vs Outflow</h3>
+          <canvas id="cumulativeFlowChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h3>Live Storage Comparison</h3>
+          <canvas id="liveStorageChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h3>Gross Storage vs Design Capacity</h3>
+          <canvas id="grossStorageChart"></canvas>
+        </div>
+
+        <div class="chart-box">
+          <h3>Reservoir Storage Percentage</h3>
+          <canvas id="reservoirChart"></canvas>
+        </div>
+      </div>
+
+      <div id="chartModal" class="chart-modal">
+        <div class="chart-modal-content">
+
+          <button id="closeModalBtn" class="close-btn">✕ Close</button>
+          <h3 id="modalChartTitle"></h3>
+
+          <div class="modal-canvas-wrapper">
+            <canvas id="modalChart"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
-  </div>
-</div>
   <script>
 
     function safeValue(v) {
-  if (typeof v === "number") return v;
-  if (typeof v === "string" && !isNaN(v)) return Number(v);
+      if (typeof v === "number") return v;
+      if (typeof v === "string" && !isNaN(v)) return Number(v);
 
-  // If chart passes context object
-  if (typeof v === "object" && v !== null) {
-    if ("raw" in v && !isNaN(v.raw)) return Number(v.raw);
-    if ("parsed" in v && !isNaN(v.parsed)) return Number(v.parsed);
-  }
+      // If chart passes context object
+      if (typeof v === "object" && v !== null) {
+        if ("raw" in v && !isNaN(v.raw)) return Number(v.raw);
+        if ("parsed" in v && !isNaN(v.parsed)) return Number(v.parsed);
+      }
 
-  return 0;
-}
+      return 0;
+    }
 
     let reservoirData = [];
     let map, karnatakaLayer, damLayer, reservoirLevelChart;
     let isOpen = false;
 
     async function initDashboard() {
-  try {
-    const res = await fetch("/api/reservoirs");
-    reservoirData = await res.json();
+      try {
+        const res = await fetch("/api/reservoirs");
+        reservoirData = await res.json();
 
-    // Karnataka bounds
-    const karnatakaBounds = [
-      [11.5, 74.0],
-      [18.5, 78.5]
-    ];
+        // Karnataka bounds
+        const karnatakaBounds = [
+          [11.5, 74.0],
+          [18.5, 78.5]
+        ];
 
-    map = L.map("map", { attributionControl: false });
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 10
-    }).addTo(map);
+        map = L.map("map", { attributionControl: false });
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 10
+        }).addTo(map);
 
-    map.fitBounds(karnatakaBounds);
+        map.fitBounds(karnatakaBounds);
 
-    const kRes = await fetch("karnataka.geojson");
-    const kGeo = await kRes.json();
-    L.geoJSON(kGeo, { style: { color: "#003366", weight: 2, fillOpacity: 0.05 } }).addTo(map);
+        const kRes = await fetch("karnataka.geojson");
+        const kGeo = await kRes.json();
+        L.geoJSON(kGeo, { style: { color: "#003366", weight: 2, fillOpacity: 0.05 } }).addTo(map);
 
-    const dRes = await fetch("dams.geojson");
-    const dGeo = await dRes.json();
-    L.geoJSON(dGeo, {
-      pointToLayer: (f, latlng) =>
-        L.circleMarker(latlng, {
-          radius: 6,
-          fillColor: "#ff7800",
-          color: "#222",
-          weight: 1,
-          fillOpacity: 0.9
-        }),
-      onEachFeature: (f, layer) => {
-        const damName = f.properties.Name;
-        layer.bindTooltip(damName, {
-  permanent: true,
-  direction: "top",
-  offset: [0, -5],
-  className: "dam-label"  // custom style
-});
+        const dRes = await fetch("dams.geojson");
+        const dGeo = await dRes.json();
+        L.geoJSON(dGeo, {
+          pointToLayer: (f, latlng) =>
+            L.circleMarker(latlng, {
+              radius: 6,
+              fillColor: "#ff7800",
+              color: "#222",
+              weight: 1,
+              fillOpacity: 0.9
+            }),
+          onEachFeature: (f, layer) => {
+            const damName = f.properties.Name;
+            layer.bindTooltip(damName, {
+              permanent: true,
+              direction: "top",
+              offset: [0, -5],
+              className: "dam-label"  // custom style
+            });
 
-        layer.on("click", (e) => {
-          // 🧭 Smooth zoom to dam
-          const lat = e.latlng.lat;
-          const lng = e.latlng.lng;
+            layer.on("click", (e) => {
+              // 🧭 Smooth zoom to dam
+              const lat = e.latlng.lat;
+              const lng = e.latlng.lng;
 
-          map.flyTo([lat, lng], 9, {
-            duration: 1.2,
-            easeLinearity: 0.25
-          });
+              map.flyTo([lat, lng], 9, {
+                duration: 1.2,
+                easeLinearity: 0.25
+              });
 
-          // Update charts
-          updateCharts(damName);
-        });
+              // Update charts
+              updateCharts(damName);
+            });
+          }
+        }).addTo(map);
+
+        updateCharts("all");
+      } catch (err) {
+        console.error("❌ Error initializing dashboard:", err);
       }
-    }).addTo(map);
-
-    updateCharts("all");
-  } catch (err) {
-    console.error("❌ Error initializing dashboard:", err);
-  }
-}
+    }
 
 
     function safeNum(v) {
@@ -191,57 +191,57 @@
     }
 
     function scrollToChart(chartId) {
-  const chartCanvas = document.getElementById(chartId);
-  if (!chartCanvas) return;
+      const chartCanvas = document.getElementById(chartId);
+      if (!chartCanvas) return;
 
-  const scrollParent = document.getElementById("charts-scroll");
-  const card = chartCanvas.closest(".chart-box") || chartCanvas;
+      const scrollParent = document.getElementById("charts-scroll");
+      const card = chartCanvas.closest(".chart-box") || chartCanvas;
 
-  const parentRect = scrollParent.getBoundingClientRect();
-  const cardRect = card.getBoundingClientRect();
+      const parentRect = scrollParent.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
 
-  // Current scroll position of the container
-  const currentScrollTop = scrollParent.scrollTop;
+      // Current scroll position of the container
+      const currentScrollTop = scrollParent.scrollTop;
 
-  // How far the card is from the top of the container (in the viewport)
-  const offsetFromParentTop = cardRect.top - parentRect.top;
+      // How far the card is from the top of the container (in the viewport)
+      const offsetFromParentTop = cardRect.top - parentRect.top;
 
-  // Target scroll so that the card is vertically centered in the container
-  const targetScrollTop =
-    currentScrollTop +
-    offsetFromParentTop -
-    (scrollParent.clientHeight - card.offsetHeight) / 2;
+      // Target scroll so that the card is vertically centered in the container
+      const targetScrollTop =
+        currentScrollTop +
+        offsetFromParentTop -
+        (scrollParent.clientHeight - card.offsetHeight) / 2;
 
-  scrollParent.scrollTo({
-    top: targetScrollTop,
-    behavior: "smooth",
-  });
-}
+      scrollParent.scrollTo({
+        top: targetScrollTop,
+        behavior: "smooth",
+      });
+    }
 
 
     function resetDashboard() {
-  // 1️⃣ Reset chart selection highlight or label
-  document.getElementById("selectedDam").innerText = "";
+      // 1️⃣ Reset chart selection highlight or label
+      document.getElementById("selectedDam").innerText = "";
 
-  // 2️⃣ Reset map position
-  map.fitBounds([
-    [11.5, 74.0],
-    [18.4, 78.5]
-  ]);
-  map.setZoom(7.3);
+      // 2️⃣ Reset map position
+      map.fitBounds([
+        [11.5, 74.0],
+        [18.4, 78.5]
+      ]);
+      map.setZoom(7.3);
 
-  // 3️⃣ Reset scroll position to top
-  document.getElementById("charts-scroll").scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
+      // 3️⃣ Reset scroll position to top
+      document.getElementById("charts-scroll").scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
 
-  // 4️⃣ Reset ALL charts back to full dataset mode
-  updateCharts("all");
+      // 4️⃣ Reset ALL charts back to full dataset mode
+      updateCharts("all");
 
-  // 5️⃣ Reset any active button styling (if future highlighting exists)
-  document.querySelectorAll("#chartNav button").forEach(btn => btn.classList.remove("active"));
-}
+      // 5️⃣ Reset any active button styling (if future highlighting exists)
+      document.querySelectorAll("#chartNav button").forEach(btn => btn.classList.remove("active"));
+    }
 
 
     function updateCharts(selectedName) {
@@ -270,6 +270,7 @@
       const outflow = filtered.reduce((s, d) => s + safeNum(d.OutFlow), 0);
       const labels = selectedName === "all" ? ["Total"] : [selectedName];
       createOrUpdateChart("flowChart", "bar", labels, [
+
         { label: "InFlow", data: [inflow], backgroundColor: "#AB87FF" },
         { label: "OutFlow", data: [outflow], backgroundColor: "#FF6384" }
       ]);
@@ -311,7 +312,7 @@
       const fullLevel = filtered.map(d => safeNum(d.Full_Reservoir_Level));
 
       if (reservoirLevelChart) reservoirLevelChart.destroy();
-     window["reservoirLevelChart"] = new Chart(document.getElementById("reservoirLevelChart"), {
+      window["reservoirLevelChart"] = new Chart(document.getElementById("reservoirLevelChart"), {
         type: "doughnut",
         data: {
           labels: names,
@@ -319,38 +320,38 @@
             {
               label: "Full Reservoir Level",
               data: fullLevel,
-              backgroundColor: ["#36A2EB","#FF6384","#FFCE56","#4BC0C0","#9966FF","#FF9F40"],
+              backgroundColor: ["#36A2EB", "#FF6384", "#FFCE56", "#4BC0C0", "#9966FF", "#FF9F40"],
               borderWidth: 1,
               cutout: "60%"
             },
             {
               label: "Present Level",
               data: presentLevel,
-              backgroundColor: ["#64B5F6","#F06292","#FFF176","#80CBC4","#B39DDB","#FFB74D"],
+              backgroundColor: ["#64B5F6", "#F06292", "#FFF176", "#80CBC4", "#B39DDB", "#FFB74D"],
               borderWidth: 1,
               cutout: "60%"
             }
           ]
         },
         options: {
-         
+
           plugins: {
             title: {
               display: true,
               text: "Reservoir Levels (Inner: Present | Outer: Full)",
-              font: { size: 10}
+              font: { size: 10 }
             },
             legend: {
               position: "right",
-              labels: { font: { size: 8 }, boxWidth: 8}
+              labels: { font: { size: 8 }, boxWidth: 8 }
             },
             datalabels: {
               color: "#000",
               font: { weight: "bold", size: 9 },
               formatter: (v) => {
-  const val = safeValue(v);
-  return val ? val.toFixed(1) + " TMC" : "";
-}
+                const val = safeValue(v);
+                return val;
+              }
 
 
             }
@@ -361,171 +362,288 @@
     }
 
     function createOrUpdateChart(id, type, labels, datasets) {
-  const existing = Chart.getChart(id);
-  if (existing) existing.destroy();
+      const existing = Chart.getChart(id);
+      if (existing) existing.destroy();
 
-  const ctx = document.getElementById(id).getContext("2d");
+      const ctx = document.getElementById(id).getContext("2d");
 
-  // 🔥 Create chart and expose it globally
-  window[id] = new Chart(ctx, {
-    type,
-    data: { labels, datasets },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        tooltip: {
-          callbacks: {
-            label: (context) => `${context.dataset.label}: ${context.raw} TMC`
+
+      window[id] = new Chart(ctx, {
+        type,
+        data: { labels, datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: (context) => `${context.dataset.label}: ${context.raw} `
+              }
+            },
+            legend: { position: "bottom" },
+            datalabels: {
+              color: "#000",
+              rotation: 90,
+              font: { size: 10, weight: "bold" },
+
+              formatter: (v) => {
+                const val = safeValue(v);
+                return val === 0 ? "" : val;
+              },
+
+              anchor: function (context) {
+                const dataset = context.dataset;
+                if (!dataset || !dataset.data) return "end";  // safe fallback
+
+                const value = dataset.data[context.dataIndex];
+                if (value == null) return "end";
+
+                const maxValue = context.chart.scales.y.max;
+                return value < maxValue * 0.15 ? "end" : "center";
+              },
+
+              align: function (context) {
+                const dataset = context.dataset;
+                if (!dataset || !dataset.data) return "end";
+
+                const value = dataset.data[context.dataIndex];
+                if (value == null) return "end";
+
+                const maxValue = context.chart.scales.y.max;
+                return value < maxValue * 0.15 ? "end" : "center";
+              },
+
+              offset: function (context) {
+                const dataset = context.dataset;
+                if (!dataset || !dataset.data) return 0;
+
+                const value = dataset.data[context.dataIndex];
+                if (value == null) return 0;
+
+                const maxValue = context.chart.scales.y.max;
+                return value < maxValue * 0.15 ? 4 : 0;
+              }
+            }
+
+          },
+          scales: type === "doughnut" ? {} : {
+            y: {
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "Values in TMC",
+                color: "#000",
+                font: {
+                  size: 14,
+
+                }
+              },
+              ticks: { callback: val => `${val} ` }
+            }
           }
+
         },
-        legend: { position: "bottom" },
-        datalabels: {
-          color: "#000",
-          anchor: "end",
-          align: "end",
-          font: { size: 10, weight: "bold" },
-          formatter: (v) => {
-  const val = safeValue(v);
-  return val ? val.toFixed(1) + " TMC" : "";
-}
+        plugins: [ChartDataLabels]
 
-
-        }
-      },
-      scales: type === "doughnut" ? {} : {
-        y: {
-          beginAtZero: true,
-          ticks: { callback: val => `${val} TMC` }
-        }
-      }
-    },
-    plugins: [ChartDataLabels]
-  });
-}
-
-
-
-
-let modalChartInstance = null;
-
-function enableModal(chartId, title) {
-  const canvas = document.getElementById(chartId);
-  if (!canvas) return;
-
-  canvas.style.cursor = "pointer";
-
-  canvas.onclick = () => {
-    const original = window[chartId];
-    if (!original) return;
-
-    document.getElementById("chartModal").style.display = "flex";
-    document.getElementById("modalChartTitle").innerText = title;
-
-    if (modalChartInstance) modalChartInstance.destroy();
-
-    const modalCanvas = document.getElementById("modalChart");
-    modalCanvas.getContext("2d").canvas._chart = undefined;
-
-    function clean(obj) {
-      if (typeof obj !== "object" || obj === null) return obj;
-      const copy = Array.isArray(obj) ? [] : {};
-      for (let key in obj) {
-        const v = obj[key];
-        if (
-          typeof v === "function" ||
-          key.startsWith("_") ||
-          key.includes("ctx") ||
-          key.includes("controller") ||
-          key.includes("tooltip") ||
-          key.includes("events") ||
-          key.includes("animation") ||
-          key === "$context"
-        ) continue;
-
-        copy[key] = clean(v);
-      }
-      return copy;
-    }
-
-    const clonedData = clean(JSON.parse(JSON.stringify(original.data)));
-    const clonedOptions = clean(JSON.parse(JSON.stringify(original.options)));
-
-    // Force actual numeric values
-    clonedData.datasets.forEach(ds => {
-      ds.data = ds.data.map(v => safeValue(v));
-    });
-
-    // FIX formatter once & safely
-    if (clonedOptions.plugins?.datalabels) {
-      clonedOptions.plugins.datalabels.formatter = (v) => {
-        const val = safeValue(v);
-        return val ? val.toFixed(1) + " TMC" : "";
-      };
-      clonedOptions.plugins.datalabels.font = { size: 16, weight: "bold" };
-    }
-
-    clonedOptions.responsive = true;
-    clonedOptions.maintainAspectRatio = false;
-
-    modalChartInstance = new Chart(modalCanvas, {
-      type: original.config.type,
-      data: clonedData,
-      options: clonedOptions,
-      plugins: [ChartDataLabels]
-    });
-
-    setTimeout(() => modalChartInstance.resize(), 100);
-  };
-}
-document.getElementById("closeModalBtn").onclick = function () {
-  document.getElementById("chartModal").style.display = "none";
-};
-  
-  window.onload=initDashboard;
-
-  fetch("./header.html")
-  .then(res => res.text())
-  .then(html => {
-    console.log("HEADER CONTENT:", html);
-    document.getElementById("header-placeholder").innerHTML = html;
-
-    setTimeout(() => {
-  const headerHeight = document.getElementById("header-placeholder").offsetHeight;
-  document.getElementById("content-wrapper").style.marginTop = headerHeight + 10 + "px"; 
-}, 200);
-    // 🔥 After header loads, sidebar toggle finally works
-    const menuBtn = document.getElementById("menu-btn");
-    const sidebar = document.getElementById("sidebar");
-    const content = document.getElementById("content-wrapper");
-
-    if (menuBtn) {
-      menuBtn.addEventListener("click", () => {
-        isOpen = !isOpen;
-        sidebar.style.right = isOpen ? "0px" : "-240px";
-        content.classList.toggle("sidebar-open", isOpen);
       });
     }
 
-    window.addEventListener("message", (event) => {
-  if (event.data.action === "closeFullscreen") {
-    document.getElementById("fullscreenIframeWrapper").style.display = "none";
-  }
-});
-  });
 
-  setTimeout(() => {
-  enableModal("reservoirLevelChart", "Reservoir Level Comparison");
-  enableModal("flowChart", "Inflow vs Outflow");
-  enableModal("storageChart", "Gross vs Live Storage");
-  enableModal("cumulativeFlowChart", "Cumulative Inflow vs Outflow");
-  enableModal("liveStorageChart", "Live Storage Comparison");
-  enableModal("grossStorageChart", "Gross Storage vs Design Capacity");
-  enableModal("reservoirChart", "Reservoir Storage Percentage");
-}, 1500);
+    function getDataLabelConfig(chartType) {
+      return {
+        color: "#000",
+
+        // Rotation only for BAR charts
+        rotation: chartType === "bar" ? 90 : 0,
+
+        font: { size: chartType === "bar" ? 10 : 12, weight: "bold" },
+
+        formatter(v) {
+          const val = safeValue(v);
+          return val === 0 ? "" : val;
+        },
+
+        // Anchor logic only for BAR charts
+        anchor(context) {
+          if (chartType !== "bar") return "center"; // donut, pie, etc.
+
+          const dataset = context.dataset;
+          if (!dataset || !dataset.data) return "center";
+
+          const value = dataset.data[context.dataIndex];
+          if (value == null) return "center";
+
+          const scales = context.chart.scales;
+          if (!scales || !scales.y) return "center";
+
+          const maxValue = scales.y.max;
+
+          return value < maxValue * 0.15 ? "end" : "center";
+        },
+
+        align(context) {
+          if (chartType !== "bar") return "center";
+
+          const dataset = context.dataset;
+          if (!dataset || !dataset.data) return "center";
+
+          const value = dataset.data[context.dataIndex];
+          if (value == null) return "center";
+
+          const scales = context.chart.scales;
+          if (!scales || !scales.y) return "center";
+
+          const maxValue = scales.y.max;
+
+          return value < maxValue * 0.15 ? "end" : "center";
+        },
+
+        offset(context) {
+          if (chartType !== "bar") return 0;
+
+          const dataset = context.dataset;
+          if (!dataset || !dataset.data) return 0;
+
+          const value = dataset.data[context.dataIndex];
+          if (value == null) return 0;
+
+          const scales = context.chart.scales;
+          if (!scales || !scales.y) return 0;
+
+          const maxValue = scales.y.max;
+
+          return value < maxValue * 0.15 ? 4 : 0;
+        }
+      };
+    }
+
+
+    let modalChartInstance = null;
+
+    function enableModal(chartId, title) {
+      const canvas = document.getElementById(chartId);
+      if (!canvas) return;
+
+      canvas.style.cursor = "pointer";
+
+      canvas.ondblclick = () => {
+        const original = window[chartId];
+        if (!original) return;
+
+        document.getElementById("chartModal").style.display = "flex";
+        document.getElementById("modalChartTitle").innerText = title;
+
+        if (modalChartInstance) modalChartInstance.destroy();
+
+        const modalCanvas = document.getElementById("modalChart");
+        modalCanvas.getContext("2d").canvas._chart = undefined;
+
+        function clean(obj) {
+          if (typeof obj !== "object" || obj === null) return obj;
+          const copy = Array.isArray(obj) ? [] : {};
+          for (let key in obj) {
+            const v = obj[key];
+            if (
+              typeof v === "function" ||
+              key.startsWith("_") ||
+              key.includes("ctx") ||
+              key.includes("controller") ||
+              key.includes("tooltip") ||
+              key.includes("events") ||
+              key.includes("animation") ||
+              key === "$context"
+            ) continue;
+
+            copy[key] = clean(v);
+          }
+          return copy;
+        }
+
+        const clonedData = clean(JSON.parse(JSON.stringify(original.data)));
+        const clonedOptions = clean(JSON.parse(JSON.stringify(original.options)));
+
+        // Force actual numeric values
+        clonedData.datasets.forEach(ds => {
+          ds.data = ds.data.map(v => safeValue(v));
+        });
+
+        // FIX formatter once & safely
+        if (clonedOptions.plugins?.datalabels) {
+          clonedOptions.plugins.datalabels = getDataLabelConfig(original.config.type);
+        }
+
+
+        clonedOptions.responsive = true;
+        clonedOptions.maintainAspectRatio = false;
+
+        modalChartInstance = new Chart(modalCanvas, {
+          type: original.config.type,
+          data: clonedData,
+          options: clonedOptions,
+          plugins: [ChartDataLabels]
+        });
+
+        setTimeout(() => modalChartInstance.resize(), 100);
+      };
+    }
+    document.getElementById("closeModalBtn").onclick = function () {
+      document.getElementById("chartModal").style.display = "none";
+    };
+
+    window.onload = initDashboard;
+
+    fetch("./header.html")
+      .then(res => res.text())
+      .then(html => {
+        console.log("HEADER CONTENT:", html);
+        document.getElementById("header-placeholder").innerHTML = html;
+        let isOpen = false;
+
+        const menuBtn = document.getElementById("menu-btn");
+        const sidebar = document.getElementById("sidebar");
+        const content = document.getElementById("content-wrapper");
+
+        // Toggle sidebar using the menu button
+        menuBtn.addEventListener("click", (event) => {
+          event.stopPropagation(); // Prevent click from closing it immediately
+          isOpen = !isOpen;
+          sidebar.style.right = isOpen ? "0px" : "-240px";
+          content.classList.toggle("sidebar-open", isOpen);
+        });
+
+        // Close sidebar when clicking anywhere outside
+        document.addEventListener("click", (event) => {
+          if (
+            isOpen &&
+            !sidebar.contains(event.target) &&
+            !menuBtn.contains(event.target)
+          ) {
+            isOpen = false;
+            sidebar.style.right = "-240px";
+            content.classList.remove("sidebar-open");
+          }
+        });
+
+        window.addEventListener("message", (event) => {
+          if (event.data.action === "closeFullscreen") {
+            document.getElementById("fullscreenIframeWrapper").style.display = "none";
+          }
+        });
+      });
+
+    setTimeout(() => {
+      enableModal("reservoirLevelChart", "Reservoir Level Comparison");
+      enableModal("flowChart", "Inflow vs Outflow");
+      enableModal("storageChart", "Gross vs Live Storage");
+      enableModal("cumulativeFlowChart", "Cumulative Inflow vs Outflow");
+      enableModal("liveStorageChart", "Live Storage Comparison");
+      enableModal("grossStorageChart", "Gross Storage vs Design Capacity");
+      enableModal("reservoirChart", "Reservoir Storage Percentage");
+    }, 1500);
 
   </script>
 
-  
+
 </body>
+
 </html>

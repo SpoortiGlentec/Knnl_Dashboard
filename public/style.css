@@ -1,55 +1,73 @@
-/* =========================================
-   0. GLOBAL BASE – FROM index.html (EXACT)
-   (Homepage uses this directly)
-========================================= */
-
 * { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins', sans-serif; }
-
-body {
-  background: linear-gradient(135deg, rgba(0,97,255,.3), #60EFFF);
-  min-height:100vh;
+body,html{
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(135deg, rgba(0, 97, 255, 0.3), #60EFFF);
+  margin: 0;
+  padding: 0;
+  height: 100dvh;
+  
 }
-
 /* HEADER */
 .header {
-  background: linear-gradient(135deg, #0F766E 56%, #1CDCCD 86%);
-  color:white;
-  padding:20px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  position:relative;
-  width:100%;
-  box-shadow:0 2px 5px rgba(0,0,0,.2);
+      background: linear-gradient(135deg, #0F766E 56%, #1CDCCD 86%);
+      color: white;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .header img {
+      position: absolute;
+      left: 20px;
+      height: 70px;
+      width: 70px;
+      object-fit: contain;
+    }
+
+    .header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin: 0;
+      text-align: center;
+    }
+
+    #menu-btn {
+      position: absolute;
+      right: 25px;
+      font-size: 1.6rem;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    #menu-btn:hover {
+      transform: scale(1.1);
+      color: #000;
+    }
+
+    @media(max-width: 600px) {
+      .header img { width: 35px; height: 35px; }
+      .header h1 { font-size: 1rem; }
+      #menu-btn { right: 15px; font-size: 1.4rem; }
+    }
+h2 {
+  text-align: center;
+  color: #003366;
+  font-size: 26px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  display: block;
 }
-
-.header img {
-  position:absolute;
-  left:20px;
-  height:70px;
-  width:70px;
-  object-fit:contain;
-}
-
-.header h1 { font-size:1.5rem; font-weight:600; }
-
-#menu-btn {
-  position:absolute;
-  right:25px;
-  font-size:1.6rem;
-  cursor:pointer;
-  color:white;
-  transition:.3s;
-}
-#menu-btn:hover { transform:scale(1.1); color:#000; }
-
 /* SIDEBAR (slides from right) */
 .sidebar {
   position:fixed;
   top:100px;
   right:-240px;
   width:240px;
-  height:calc(100vh - 100px);
+  height:calc(100dvh - 100px);
   background:white;
   border-left:1px solid rgba(0,0,0,.1);
   box-shadow:-3px 0 12px rgba(0,0,0,.15);
@@ -68,38 +86,32 @@ body {
   font-weight:500;
   transition:.25s;
 }
-
 .sidebar a:hover {
   background:rgba(0,120,255,.18);
   transform:translateX(-5px);
 }
-
 /* CONTENT WRAPPER (shifts when sidebar opens on desktop) */
 #content-wrapper {
   width:100%;
   transition:margin-right .3s ease;
 }
-
 #content-wrapper.sidebar-open {
   margin-right:240px;
 }
-
 /* Mobile behavior (overlay — no shift) */
 @media(max-width:768px){
   #content-wrapper.sidebar-open { margin-right:0; }
 }
-
 /* DASHBOARD GRID */
 .dashboard-container {
   display:flex;
   flex-wrap:wrap;
   justify-content:center;
-  gap:25px;
-  padding:25px;
+  gap:15px;
+  padding:15px;
   max-width:1100px;
   margin:auto;
 }
-
 /* CARD */
 .dashboard-card {
   width:300px;
@@ -114,15 +126,12 @@ body {
   text-decoration:none;
   color:black;
 }
-
 .dashboard-card:hover {
   transform:translateY(-8px);
   box-shadow:0 10px 26px rgba(0,120,255,.30);
   border-image:linear-gradient(135deg,rgba(0,120,255,.9),#60EFFF) 1;
 }
-
 .dashboard-card img { width:100%; height:150px; object-fit:cover; }
-
 .card-overlay {
   position:absolute;
   top:0; left:0;
@@ -133,7 +142,6 @@ body {
   gap:10px;
   align-items:flex-start;
 }
-
 .card-icon {
   height:32px; width:32px;
   background:rgba(15,23,42,.6);
@@ -144,24 +152,20 @@ body {
   font-size:18px;
   color:white;
 }
-
 .card-overlay-title {
   color:white;
   font-size:.78rem;
   margin-top:6px;
 }
-
 .card-content {
   padding:12px 16px;
   display:flex;
   flex-direction:column;
   gap:4px;
 }
-
 .card-title { font-size:1.05rem; font-weight:600; }
 .card-subtitle, .card-caption { color:#666; font-size:.85rem; }
 .card-caption { margin-top:auto; opacity:.85; font-size:.8rem; }
-
 /* RIPPLE */
 .ripple-span {
   position:absolute;
@@ -171,35 +175,17 @@ body {
   background:rgba(0,120,255,.35);
   pointer-events:none;
 }
-
 @keyframes ripple { 
   to { 
     transform:scale(3.5); 
     opacity:0; 
   } 
 }
-
-/* =========================================================
-   🔹 ORIGINAL LIFT IRRIGATION PAGE STYLING (EXACT COPY)
-   Applies only when <body class="lift-page">
-========================================================= */
-
+/*lift-page*/
 body.lift-page {
-  font-family: "Poppins", Arial, sans-serif;
-  background: linear-gradient(135deg, rgba(0, 97, 255, 0.3), #60EFFF);
-  margin: 0;
-  padding: 0;
-  color: #2c3e50;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
 }
-
-/* Header spacing */
-body.lift-page #header-placeholder {
-  width: 100%;
-}
-
 /* Wrapper for content layout */
 body.lift-page .page-content {
   display: flex;
@@ -207,21 +193,6 @@ body.lift-page .page-content {
   align-items: center;
   width: 100%;
 }
-
-/* Page Title */
-body.lift-page h1 {
-  text-align: center;
-  color: #2c3e50;
-  font-weight: 700;
-  margin: 25px 0;
-  font-size: 1.8rem;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
-
 /* File Selection Cards */
 body.lift-page .file-grid {
   display: flex;
@@ -233,39 +204,6 @@ body.lift-page .file-grid {
   margin: auto;
   padding-bottom: 40px;
 }
-
-body.lift-page .file-card {
-  background: #fff;
-  border-radius: 10px;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
-  width: 300px;
-  height: 200px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-
-body.lift-page .file-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
-}
-
-body.lift-page .file-card h3 {
-  color: #2980b9;
-  font-size: 1rem;
-  margin: 0;
-}
-
-body.lift-page .file-card small {
-  color: #7f8c8d;
-  font-size: 0.8rem;
-  margin-top: 5px;
-}
-
 /* Google Sheet Button Section */
 body.lift-page .sheet-section {
   text-align: center;
@@ -284,12 +222,10 @@ body.lift-page .sheet-btn {
   transition: 0.3s;
   font-size: 14px;
 }
-
 body.lift-page .sheet-btn:hover {
   background: #4834d4;
   transform: scale(1.05);
 }
-
 /* Table Card */
 body.lift-page .card {
   background: white;
@@ -300,20 +236,17 @@ body.lift-page .card {
   width: 95%;
   overflow-x: auto;
 }
-
 /* Table */
 body.lift-page table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
-
 body.lift-page th,
 body.lift-page td {
   border: 1px solid #ddd;
   padding: 10px;
 }
-
 body.lift-page th {
   background-color: #3498db;
   text-align: center;
@@ -323,116 +256,6 @@ body.lift-page th {
 
 body.lift-page tr:nth-child(even) {
   background-color: #f9f9f9;
-}
-
-/* Sidebar */
-body.lift-page .sidebar {
-  position: fixed;
-  top: 100px;
-  right: -240px;
-  width: 240px;
-  height: calc(100vh - 100px);
-  background: #fff;
-  border-left: 1px solid #ddd;
-  transition: .3s;
-  padding-top: 10px;
-  z-index: 9999;
-}
-
-body.lift-page .sidebar a {
-  display: block;
-  padding: 12px 16px;
-  text-decoration: none;
-  color: #0f766e;
-  font-weight: 500;
-}
-
-/* Dashboard Cards (Shared with main) */
-body.lift-page .dashboard-card {
-  width: 300px;
-  height: 260px;
-  background: white;
-  border-radius: 16px;
-  overflow: hidden;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,.1);
-  transition: .28s;
-  position: relative;
-  text-decoration: none;
-  color: black;
-}
-
-body.lift-page .dashboard-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 10px 26px rgba(0,120,255,.30);
-  border-image: linear-gradient(135deg,rgba(0,120,255,.9),#60EFFF) 1;
-}
-
-/* Image and overlay text inside cards */
-body.lift-page .dashboard-card img {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-}
-
-body.lift-page .card-overlay {
-  position: absolute;
-  top: 0; left: 0;
-  width: 100%; height: 150px;
-  background: linear-gradient(to bottom,rgba(0,0,0,.35),transparent 65%);
-  padding: 10px;
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-}
-
-body.lift-page .card-icon {
-  height: 32px; width: 32px;
-  background: rgba(15,23,42,.6);
-  border-radius: 50%;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:18px;
-  color:white;
-}
-
-body.lift-page .card-overlay-title {
-  color:white;
-  font-size:.78rem;
-  margin-top:6px;
-}
-
-/* Card Text Area */
-body.lift-page .card-content {
-  padding:12px 16px;
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-}
-
-body.lift-page .card-title { font-size:1.05rem; font-weight:600; }
-body.lift-page .card-subtitle { color:#666; font-size:.85rem; }
-body.lift-page .card-caption { margin-top:auto; opacity:.85; font-size:.8rem; }
-
-/* Ripple Effect */
-body.lift-page .ripple-span {
-  position:absolute;
-  border-radius:50%;
-  transform:scale(0);
-  animation:ripple .6s ease-out;
-  background:rgba(0,120,255,.35);
-  pointer-events:none;
-}
-
-@keyframes ripple {
-  to { transform:scale(3.5); opacity:0; }
-}
-
-/* Sidebar Slide-in */
-body.lift-page #content-wrapper.sidebar-open {
-  margin-right: 240px;
-  transition: margin-right .3s;
 }
 
 /* Table Info Section */
@@ -468,31 +291,28 @@ body.lift-page .back-btn {
 body.lift-page .back-btn:hover {
   background: #c0392b;
 }
-
-
-/* =========================================
-   🔹 ORIGINAL RESERVOIRS PAGE STYLING (EXACT)
-   Scopes only when <body class="reservoirs-page">
-========================================= */
-
-body.reservoirs-page {
-  font-family: "Poppins", Arial, sans-serif;
-  background: linear-gradient(135deg, rgba(0, 97, 255, 0.3), #60EFFF);
-  margin: 0;
-  color: #333;
-  height: auto;
-  overflow: hidden;
+body.lift-page .go-top-btn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: #0078ff;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  z-index: 9999;
+  transition: 0.2s;
 }
 
-body.reservoirs-page h2 {
-  text-align: center;
-  color: #003366;
-  font-size: 26px;
-  margin-top: 20px;
-  margin-bottom: 10px;
-  display: block;
+body.lift-page .go-top-btn:hover {
+  background: #005fcc;
+  transform: scale(1.05);
 }
 
+/*reservoirs-page*/
 body.reservoirs-page #selectedDam {
   text-align: center;
   font-weight: 500;
@@ -520,7 +340,6 @@ body.reservoirs-page #resetButton:hover {
   background: #005f8f;
   transform: scale(1.05);
 }
-
 /* Selector Pills */
 body.reservoirs-page #chartNav {
   display: flex;
@@ -530,7 +349,6 @@ body.reservoirs-page #chartNav {
   margin-top: 8px;
   margin-bottom: 12px;
 }
-
 body.reservoirs-page #chartNav button {
   padding: 6px 10px;
   background: #0F766E;
@@ -546,14 +364,12 @@ body.reservoirs-page #chartNav button:hover {
   background: #0b5c52;
   transform: scale(1.07);
 }
-
 /* Main Layout */
 body.reservoirs-page .main-container {
   display: grid;
   grid-template-columns: 38% 62%;
-  height: calc(100vh - 100px);
-}
 
+}
 /* Dam Labels */
 body.reservoirs-page .dam-label {
   background: rgba(255, 255, 255, 0.8);
@@ -573,6 +389,7 @@ body.reservoirs-page #map-container {
   background: #fff;
   border-right: 2px solid #ccc;
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.05);
+  height: 450px;
 }
 
 body.reservoirs-page #map {
@@ -587,7 +404,7 @@ body.reservoirs-page #charts-scroll {
   overflow-y: auto;
   padding: 20px;
   background: #f8fafc;
-}
+  height: 450px;}
 
 /* Donut Charts */
 body.reservoirs-page .donut-container {
@@ -634,112 +451,23 @@ body.reservoirs-page canvas {
   height: 300px !important;
   margin: 0 auto;
 }
-
-/* Sidebar */
-body.reservoirs-page .sidebar {
-  position: fixed;
-  top: 100px;
-  right: -240px;
-  width: 240px;
-  height: calc(100vh - 100px);
-  background: #fff;
-  border-left: 1px solid #ddd;
-  transition: .3s;
-  padding-top: 10px;
-  z-index: 9999;
-}
-
-body.reservoirs-page .sidebar a {
-  display: block;
-  padding: 12px 16px;
-  text-decoration: none;
-  color: #0f766e;
-  font-weight: 500;
-}
-
-/* Header Offset */
-body.reservoirs-page #header-placeholder {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  z-index: 9999;
-  background: white;
-}
-
 body.reservoirs-page #content-wrapper {
   margin-top: 0;
 }
-
-body.reservoirs-page #content-wrapper.sidebar-open {
-  margin-right: 240px;
-  transition: margin-right .3s;
-}
-
 /* Chart Action Layout */
 body.reservoirs-page #chartActions {
   display: flex;
   justify-content: center;
   align-items: center;
   column-gap: 6px;
-  row-gap: 8px;
-  margin: 8px auto;
   flex-wrap: wrap;
 }
 
-/* Modal */
-body.reservoirs-page .chart-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-  backdrop-filter: blur(4px);
-  z-index: 999999;
-  justify-content: center;
-  align-items: center;
-}
-
-body.reservoirs-page .chart-modal-content {
-  background: #fff;
-  width: 90vw;
-  max-width: 1300px;
-  height: 88vh;
-  border-radius: 12px;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-}
-
-body.reservoirs-page .modal-canvas-wrapper {
-  flex: 1;
-  width: 100%;
-  height: calc(100% - 60px);
-}
 
 body.reservoirs-page #modalChart {
   width: 100% !important;
   height: 100% !important;
 }
-
-body.reservoirs-page .close-btn {
-  position: absolute;
-  right: 15px;
-  top: 15px;
-  background: #ff4d4d;
-  border: none;
-  color: white;
-  padding: 6px 12px;
-  font-size: 16px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-body.reservoirs-page .close-btn:hover {
-  background: #e63939;
-}
-
 /* Mobile */
 @media (max-width: 900px) {
   body.reservoirs-page .main-container {
@@ -755,28 +483,7 @@ body.reservoirs-page .close-btn:hover {
     height: auto;
   }
 }
-
-
-
-/* =========================================================
-   🔹 ORIGINAL FINANCE PAGE STYLING (EXACT COPY)
-   Applies only when <body class="finance-page">
-========================================================= */
-
-body.finance-page {
-  font-family: "Segoe UI", sans-serif;
-  background: linear-gradient(135deg, rgba(0, 97, 255, 0.3), #60EFFF);
-  margin: 0;
-  padding: 20px;
-  color: #333;
-}
-
-/* PAGE HEADER */
-body.finance-page header {
-  text-align: center;
-  margin-bottom: 25px;
-}
-
+/*finance-page */
 /* FILTER CONTROLS */
 body.finance-page .controls {
   display: flex;
@@ -786,13 +493,6 @@ body.finance-page .controls {
   margin-bottom: 25px;
   flex-wrap: wrap;
 }
-
-body.finance-page a {
-  text-decoration: none;
-  color: #0d6efd;
-  font-weight: 600;
-}
-
 body.finance-page select {
   padding: 8px 10px;
   font-size: 14px;
@@ -800,19 +500,19 @@ body.finance-page select {
   border: 1px solid #ccc;
   min-width: 180px;
 }
-
 /* DASHBOARD GRID */
 body.finance-page .dashboard {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(420px, 1fr));
-  gap: 30px;
+  grid-template-columns: repeat(auto-fit, minmax(520px, 1fr));
+  gap: 10px;
+  margin: 10px;
   overflow: visible;
   justify-items: stretch;
   align-items: stretch;
   width: 100%;
   box-sizing: border-box;
+  height: 350px;
 }
-
 /* CHART CARD */
 body.finance-page .card {
   background: #fff;
@@ -842,7 +542,7 @@ body.finance-page .card h3 {
 body.finance-page .chart-container {
   position: relative;
   width: 100%;
-  height: 380px;
+  height: 300px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -854,91 +554,18 @@ body.finance-page canvas {
   object-fit: contain;
 }
 
-/* SIDEBAR */
-body.finance-page .sidebar {
-  position: fixed;
-  top: 100px;
-  right: -240px;
-  width: 240px;
-  height: calc(100vh - 100px);
-  background: #fff;
-  border-left: 1px solid #ddd;
-  transition: .3s;
-  padding-top: 10px;
-  z-index: 9999;
-}
-
-body.finance-page .sidebar a {
-  display: block;
-  padding: 12px 16px;
-  text-decoration: none;
-  color: #0f766e;
-  font-weight: 500;
-}
-
-body.finance-page #content-wrapper.sidebar-open {
-  margin-right: 240px;
-  transition: margin-right .3s;
-}
-
-/* ========= MODAL CHART VIEWER ========= */
-body.finance-page .chart-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-  backdrop-filter: blur(4px);
-  z-index: 999999;
-  justify-content: center;
-  align-items: center;
-}
-
-body.finance-page .chart-modal-content {
-  background: #fff;
-  width: 92vw;
-  max-width: 1300px;
-  height: 88vh;
-  border-radius: 12px;
-  padding: 18px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
-}
-
-body.finance-page .modal-canvas-wrapper {
-  flex: 1;
-  width: 100%;
-  height: calc(100% - 40px);
-}
 
 body.finance-page #modalChart {
   width: 100% !important;
   height: 100% !important;
 }
 
-body.finance-page .close-btn {
-  position: absolute;
-  right: 15px;
-  top: 15px;
-  background: #ff4d4d;
-  border: none;
-  color: white;
-  padding: 6px 12px;
-  font-size: 16px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-body.finance-page .close-btn:hover {
-  background: #e63939;
-}
 
 /* RESPONSIVE RULES */
 @media (max-width: 1024px) {
   body.finance-page .dashboard {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+    gap: 10px;
   }
 
   body.finance-page .chart-container {
@@ -955,27 +582,7 @@ body.finance-page .close-btn:hover {
     height: 280px;
   }
 }
-
-
-/* =========================================================
-   🔹 ORIGINAL FINANCE YEAR PAGE STYLING (EXACT COPY)
-   Applies only when <body class="year-finance-page">
-========================================================= */
-
-body.year-finance-page {
-  font-family: "Segoe UI", sans-serif;
-  background: linear-gradient(135deg, rgba(0, 97, 255, 0.3), #60EFFF);
-  margin: 0;
-  height: 100vh;
-  color: #333;
-}
-
-/* Header placeholder (page title area) */
-body.year-finance-page #header-placeholder {
-  text-align: center;
-  margin-bottom: 25px;
-}
-
+/*year-finance-page */
 /* Controls / Select filters */
 body.year-finance-page .controls {
   display: flex;
@@ -997,8 +604,9 @@ body.year-finance-page select {
 /* Grid Dashboard Layout */
 body.year-finance-page .dashboard {
   display: grid;
+  margin-top: 30px;
   grid-template-columns: repeat(auto-fit, minmax(620px, 1fr));
-  gap: 15px;
+  gap: 30px;
   justify-items: stretch;
   align-items: stretch;
   width: 100%;
@@ -1046,80 +654,10 @@ body.year-finance-page canvas {
   object-fit: contain;
 }
 
-/* SIDEBAR */
-body.year-finance-page .sidebar {
-  position: fixed;
-  top: 100px;
-  right: -240px;
-  width: 240px;
-  height: calc(100vh - 100px);
-  background: #fff;
-  border-left: 1px solid #ddd;
-  transition: .3s;
-  padding-top: 10px;
-  z-index: 9999;
-}
-
-body.year-finance-page .sidebar a {
-  display: block;
-  padding: 12px 16px;
-  text-decoration: none;
-  color: #0f766e;
-  font-weight: 500;
-}
-
-body.year-finance-page #content-wrapper.sidebar-open {
-  margin-right: 240px;
-  transition: margin-right .3s;
-}
-
-/* ========== Chart Modal (Reusable) ========== */
-body.year-finance-page .chart-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.75);
-  z-index: 999999;
-  justify-content: center;
-  align-items: center;
-  backdrop-filter: blur(4px);
-}
-
-body.year-finance-page .chart-modal-content {
-  background: #fff;
-  width: 90vw;
-  max-width: 1200px;
-  height: 85vh;
-  border-radius: 12px;
-  padding: 20px;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-}
-
-body.year-finance-page .modal-canvas-wrapper {
-  flex: 1;
-  width: 100%;
-  height: 100%;
-}
 
 body.year-finance-page #modalChart {
   width: 100% !important;
   height: 100% !important;
-}
-
-/* Close Modal Button */
-body.year-finance-page .close-btn {
-  position: absolute;
-  right: 15px;
-  top: 15px;
-  background: #ff4d4d;
-  border: none;
-  color: white;
-  font-size: 16px;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
 }
 
 /* RESPONSIVE FIXES */
@@ -1143,21 +681,7 @@ body.year-finance-page .close-btn {
     height: 280px;
   }
 }
-
-
-/* =========================================================
-   🔹 ORIGINAL PROJECT PAGE STYLING (EXACT COPY)
-   Applies only when <body class="projects-page">
-========================================================= */
-
-body.projects-page {
-  font-family: "Segoe UI", Arial, sans-serif;
-  background: linear-gradient(135deg, rgba(0, 97, 255, 0.3), #60EFFF);
-  margin: 0;
-  padding: 20px;
-  color: #333;
-}
-
+/*projects-page */
 /* Dropdown Filter Section */
 body.projects-page .filter-container {
   text-align: center;
@@ -1172,38 +696,8 @@ body.projects-page select {
   cursor: pointer;
 }
 
+
 /* Table Popup Overlay */
-body.projects-page #projectTableContainer {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
-
-body.projects-page #projectTableContainer > div {
-  background: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 800px;
-  width: 90%;
-  max-height: 80%;
-  overflow: auto;
-  position: relative;
-}
-
-/* Title */
-body.projects-page h2 {
-  text-align: center;
-  margin-bottom: 30px;
-  color: #2c3e50;
-  font-size: 22px;
-}
 
 /* Project Table Styling */
 body.projects-page #projectTable {
@@ -1290,33 +784,6 @@ body.projects-page #backBtn:hover {
   background-color: #2e86c1;
 }
 
-/* Sidebar */
-body.projects-page .sidebar {
-  position: fixed;
-  top: 100px;
-  right: -240px;
-  width: 240px;
-  height: calc(100vh - 100px);
-  background: #fff;
-  border-left: 1px solid #ddd;
-  transition: .3s;
-  padding-top: 10px;
-  z-index: 9999;
-}
-
-body.projects-page .sidebar a {
-  display: block;
-  padding: 12px 16px;
-  text-decoration: none;
-  color: #0f766e;
-  font-weight: 500;
-}
-
-body.projects-page #content-wrapper.sidebar-open {
-  margin-right: 240px;
-  transition: margin-right .3s;
-}
-
 /* Close Table Button */
 body.projects-page #closeTableBtn {
   position: absolute;
@@ -1342,213 +809,163 @@ body.projects-page #closeTableBtn {
 }
 
 
-/* =========================================================
-   🔹 ORIGINAL LAND PAGE STYLING (EXACT COPY)
-   Applies ONLY when: <body class="land-page">
-========================================================= */
-
-body.land-page {
-  background: linear-gradient(135deg, rgba(0, 97, 255, 0.3), #60EFFF);
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  font-family: Arial, sans-serif;
-}
-
-/* Full layout container */
-body.land-page .container {
-  display: flex;
-  width: 100vw;
-  height: 100vh;
-}
-
-/* Map Area */
-body.land-page #map {
-  width: 50%;
-  height: 100%;
-  position: relative; /* allows legend & reset button */
-}
-
-/* Map Legend Box */
-body.land-page .map-legend {
-  position: absolute;
-  bottom: 55px;
-  left: 15px;
-  background: rgba(255, 255, 255, 0.9);
-  padding: 8px 10px;
-  border-radius: 6px;
-  font-size: 11px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-  z-index: 5;
-}
-
-body.land-page .map-legend-row {
-  display: flex;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-body.land-page .map-legend-row:last-child {
-  margin-bottom: 0;
-}
-
-body.land-page .legend-swatch {
-  width: 12px;
-  height: 12px;
-  border-radius: 3px;
-  margin-right: 6px;
-  flex-shrink: 0;
-}
-
-/* Reset Map Button */
-body.land-page .reset-map-btn {
-  position: absolute;
-  bottom: 15px;
-  right: 15px;
-  background: #007bff;
-  color: #fff;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  cursor: pointer;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.25);
-  z-index: 5;
-}
-
-body.land-page .reset-map-btn:hover {
-  background: #005fcc;
-}
-
-/* Header placeholder */
-body.land-page #header-placeholder {
+/* Modal Background */
+body.projects-page #chartModal {
+  position: fixed;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;  /* modal sits below table */
 }
 
-/* Right Side Scrollable Chart Area */
-body.land-page #right-panel {
-  width: 50%;
+/* Modal Chart Inside */
+body.projects-page #modalChart {
+  position: relative;
+  z-index: 1;
+}
+
+/* TABLE OVERLAY (THIS MUST BE ABOVE CHAT MODAL) */
+body.projects-page #projectTableContainer {
+  display: none;               /* hidden initially */
+  position: fixed;             /* FIXED overlays entire screen */
+  top: 0;
+  left: 0;
+  width: 100%;
   height: 100%;
-  overflow-y: auto;
-  padding: 15px;
-  background: #f7f9fb;
+  background: rgba(0, 0, 0, 0.55);
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;               /* higher than modal */
+}
+
+/* Table Box */
+body.projects-page #projectTableContainer > div {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 800px;
+  width: 90%;
+  max-height: 80%;
+  overflow: auto;
+  position: relative;
+}
+
+/*land-page*/
+/* Full layout container */
+/* ===== LAYOUT FIXED ===== */
+body.land-page .container {
+  display: grid;
+  grid-template-columns: 1fr 1fr;  /* exactly HALF - HALF */
+ 
+  gap: 10px;
+height: calc(100vh - 150px); 
   box-sizing: border-box;
 }
 
-/* Dropdown Selection Row */
-body.land-page .controls {
-  margin-bottom: 15px;
+
+
+body.land-page #content-wrapper {
+  height: auto;
+  overflow: hidden;
+}
+
+body.land-page .chart-wrapper {
+  flex: 1;
   display: flex;
-  gap: 20px;
+  justify-content: center;   /* horizontal center */
+  align-items: center;       /* vertical center */
+  width: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
-body.land-page select {
-  padding: 8px 10px;
-  font-size: 14px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  min-width: 150px;
-}
 
-/* Card Container */
-body.land-page .card {
-  background: white;
-  padding: 25px;
-  border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-}
 
-/* Sidebar */
-body.land-page .sidebar {
-  position: fixed;
-  top: 100px;
-  right: -240px;
-  width: 240px;
-  height: calc(100vh - 100px);
-  background: #fff;
-  border-left: 1px solid #ddd;
-  transition: .3s;
-  padding-top: 10px;
-  z-index: 9999;
-}
-
-body.land-page .sidebar a {
-  display: block;
-  padding: 12px 16px;
-  text-decoration: none;
-  color: #0f766e;
-  font-weight: 500;
-}
-
-body.land-page #content-wrapper.sidebar-open {
-  margin-right: 240px;
-  transition: margin-right .3s;
-}
-
-/* ======= UNIVERSAL CHART MODAL FOR THIS PAGE ======= */
-body.land-page .chart-modal {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.65);
-  backdrop-filter: blur(5px);
-  z-index: 999999;
+body.land-page .chart-wrapper canvas {
   justify-content: center;
   align-items: center;
 }
 
-body.land-page .chart-modal-content {
-  background: #fff;
-  width: 90vw;
-  max-width: 1200px;
-  height: 88vh;
-  border-radius: 12px;
-  padding: 20px;
+/* CHART LOOK BETTER */
+
+
+/* ===== MAP AREA ===== */
+body.land-page #map {
+  width: 100%;
+  height: 100%;              /* makes map fill its half perfectly */
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  position: relative;
+}
+
+/* RESET BUTTON */
+body.land-page #resetMapBtn {
+  display: none !important;
+}
+body.land-page #resetMapBtn:hover {
+  background: #0056b3;
+}
+
+/* ===== RIGHT PANEL (CHART SIDE) ===== */
+body.land-page #right-panel {
+  background: white;
+  border-radius: 10px;
+  padding: 15px;
+  overflow-y: auto;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* CARD CONTAINER */
+body.land-page .card {
+  width: 100%;
+  height: 100%;
   display: flex;
   flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;          
+  padding: 3px 10px 10px 10px;      
+  background: #fff;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
-body.land-page .modal-canvas-wrapper {
-  flex: 1;
-  width: 100%;
-}
 
-body.land-page #modalChart {
-  width: 100% !important;
-  height: 100% !important;
-}
 
-/* Close modal button */
-body.land-page .close-btn {
-  position: absolute;
-  right: 15px;
-  top: 15px;
-  background: #ff4d4d;
-  color: white;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-}
-
-body.land-page .close-btn:hover {
-  background: #d63b3b;
-}
-
-/* Back Button */
+/* BACK BUTTON */
 body.land-page #backBtn {
-  margin-top: 10px;
+  margin-top: 12px;
   display: none;
   background: #007bff;
   color: white;
-  padding: 8px 14px;
   border: none;
+  padding: 8px 14px;
   border-radius: 6px;
   cursor: pointer;
 }
+body.land-page #backBtn:hover {
+  background: #0056b3;
+}
 
+/* BETTER HEADING */
+#chartTitle {
+  font-weight: 600;
+  margin-bottom: 15px;
+  color: #003366;
+}
 
-/* reuse .chart-modal from above for land’s chart viewer */
+/* ===== GRADIENT BACKGROUND ===== */
+body.land-page {
+  background: linear-gradient(130deg, #42caff, #67b3ff, #bfeaff);
+  background-size: cover;
+}
 
 /* =========================================
    7. RESPONSIVE GENERAL
@@ -1558,5 +975,81 @@ body.land-page #backBtn {
   .reservoirs-page .main-container {
     grid-template-columns:1fr;
     height:auto;
+  
+}
+  body.land-page .container {
+    grid-template-columns: 1fr;    
+    grid-template-rows: auto auto; 
+    height: auto;                  
+    gap: 10px;
+  }
+   body.land-page #map,
+  body.land-page .card {
+    min-height: 300px; 
+  }
+
+}
+/* =========================================================
+   UNIVERSAL CHART MODAL (WORKS FOR ALL PAGES)
+========================================================= */
+
+.chart-modal {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  backdrop-filter: blur(4px);
+  z-index: 999999;
+  justify-content: center;
+  align-items: center;
+}
+
+.chart-modal-content {
+  background: #fff;
+  width: 90vw;
+  max-width: 1200px;
+  height: 85vh;
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-canvas-wrapper {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+}
+
+#modalChart {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Close button */
+.close-btn {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  background: #ff4d4d;
+  border: none;
+  color: white;
+  font-size: 16px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.close-btn:hover {
+  background: #e63939;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .chart-modal-content {
+    width: 95vw;
+    height: 90vh;
+    padding: 15px;
   }
 }
