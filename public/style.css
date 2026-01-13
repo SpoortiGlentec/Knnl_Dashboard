@@ -659,6 +659,9 @@ body.year-finance-page #modalChart {
   width: 100% !important;
   height: 100% !important;
 }
+body.year-finance-page .card.span-two {
+  grid-column: span 2;
+}
 
 /* RESPONSIVE FIXES */
 @media (max-width: 1024px) {
@@ -672,15 +675,47 @@ body.year-finance-page #modalChart {
   }
 }
 
+/* =========================
+   MOBILE ONLY (≤ 600px)
+========================= */
 @media (max-width: 600px) {
+
+  /* One chart per row */
+  body.year-finance-page .dashboard {
+    grid-template-columns: 1fr;   /* ✅ single column */
+  }
+
+  /* Disable span-two ONLY on mobile */
+  body.year-finance-page .card.span-two {
+    grid-column: auto;            /* ❌ no colspan */
+  }
+
   body.year-finance-page .card {
-    padding: 15px;
+    padding: 14px;
   }
 
   body.year-finance-page .chart-container {
-    height: 280px;
+    height: 240px;
+  }
+
+  body.year-finance-page canvas {
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* Month title + select stack nicely */
+  body.year-finance-page .card > div:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  body.year-finance-page select {
+    width: 100%;
+    font-size: 13px;
   }
 }
+
 /*projects-page */
 /* Dropdown Filter Section */
 body.projects-page .filter-container {
@@ -805,6 +840,15 @@ body.projects-page #closeTableBtn {
 
   body.projects-page {
     padding: 10px;
+  }
+   body.projects-page canvas {
+    height: 260px !important;
+  }
+   body.projects-page .chart-box {
+    min-height: 320px;
+  }
+   body.projects-page .charts-container {
+    grid-template-columns: 1fr;
   }
 }
 
