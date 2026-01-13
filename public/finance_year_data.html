@@ -19,12 +19,12 @@
     <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
     <a href="./WaterReserviors.html">Water Reservoirs</a>
     <a href="./lift_irrigation.html">Lift Irrigation</a>
-    <a href="./finance.html">Finance</a>
+    <a href="./Assest_inventory.html">Assest Inventory</a>
     <a href="./project_dash.html">Projects</a>
     <a href="./land_data.html">Land</a>
     <a href="./finance_year_data.html">Yearly Finance</a>
   </div>
-   <h2>Year wise Financial Expenditure</h2>
+  <h2>Year wise Financial Expenditure</h2>
   <!-- <div class="controls">
     <label for="yearSelect">Select Year for Month Chart:</label>
     <select id="yearSelect">
@@ -33,13 +33,13 @@
   </div> -->
   <div id="content-wrapper">
     <div class="dashboard">
-      <div class="card">
-        <h3>Field-wise Total Expenditure</h3>
+      <!-- <div class="card">
+        <h3>Total Expenditure</h3>
         <div class="chart-container"><canvas id="fieldPie"></canvas></div>
-      </div>
+      </div> -->
 
       <div class="card">
-        <h3>Field-wise Expenditure</h3>
+        <h3>Expenditure</h3>
         <div class="chart-container"><canvas id="fieldBar"></canvas></div>
       </div>
 
@@ -48,7 +48,7 @@
         <div class="chart-container"><canvas id="yearBar"></canvas></div>
       </div>
 
-      <div class="card">
+      <div class="card span-two">
         <div style="width:100%; display:flex; justify-content:space-between; align-items:center;">
           <h3 id="monthTitle">Month-wise Expenditure</h3>
 
@@ -62,6 +62,7 @@
           <canvas id="monthBar"></canvas>
         </div>
       </div>
+
       <div id="chartModal" class="chart-modal">
         <div class="chart-modal-content">
 
@@ -87,18 +88,12 @@
     // Load financial data
     async function loadData() {
       try {
-        const res = await fetch("http://localhost:3001/api/financial_year_data");
+        const res = await fetch("/api/financial_year_data");
         const data = await res.json();
-        // your API returns { records: [...], years: [...] } in the original code
         records = data.records || [];
         monthsData = data.years || [];
-
-        // If your API returns the DB rows directly, adjust accordingly:
-        // monthsData = data; // uncomment if your endpoint returns rows
-
         renderStaticCharts();
         populateYearSelect();
-        // pick default (last year in list)
         const defaultYear = getDefaultYear();
         if (defaultYear) {
           renderMonthChart(defaultYear);
@@ -158,7 +153,7 @@
 
                 if (value < 22000) return "";
 
-                return value.toLocaleString("en-IN") + " Cr";
+                return value;
               },
 
               rotation: 90,
@@ -183,79 +178,184 @@
       });
 
       // FIELD BAR
-      window["fieldBar"] = new Chart(document.getElementById("fieldBar"), {
-        type: 'bar',
-        data: {
-          labels: Object.keys(fieldTotals),
-          datasets: [{
-            label: "Expenditure",
-            data: Object.values(fieldTotals),
-            backgroundColor: "#A0E7E5"
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: {
-            legend: { display: false },
-            datalabels: {
-              anchor: 'end',
-              align: 'end',
-              clip: false,
-              clamp: false,
-              rotation: 90,
-              color: '#000',
-              font: { size: 12, weight: 'bold' },
-              formatter: (value) => value.toLocaleString("en-IN") + "Cr"
+      window["fieldBar"] = new Chart(
+        document.getElementById("fieldBar"),
+        {
+          type: "bar",
+          data: {
+            labels: Object.keys(fieldTotals),
+            datasets: [
+              {
+                label: "Expenditure",
+                data: Object.values(fieldTotals),
+                backgroundColor: "#A0E7E5",
+                borderWidth: 0
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            // 🔥 CRITICAL: correct hover detection
+            interaction: {
+              mode: "nearest",
+              axis: "x",
+              intersect: false
+            },
+
+            hover: {
+              mode: "nearest",
+              axis: "x",
+              intersect: false
+            },
+
+            layout: {
+              padding: { top: 70, }
+            },
+
+            scales: {
+              x: {
+                offset: true,          
+                ticks: {
+                  maxRotation: 45,
+                  minRotation: 45
+                }
+              },
+              y: {
+                min: 1000,
+                beginAtZero: false,
+                grace: "10%",
+                title: {
+                  display: true,
+                  text: "Values in 1000 Cr"
+                },
+                ticks: {
+                  callback: (value) => value / 1000
+                }
+              }
+            },
+
+            plugins: {
+              legend: {
+                display: false
+              },
+
+              tooltip: {
+                enabled: true,
+                position: "nearest",
+                callbacks: {
+                  title: (items) => items[0].label,
+                  label: (context) => {
+                    return (context.raw / 1000).toFixed(1);
+                  }
+                }
+              },
+
+              datalabels: {
+                anchor: "end",
+                align: "end",
+                rotation: 90,
+                clip: false,
+                clamp: false,
+                color: "#000",
+                font: {
+                  size: 12,
+                  weight: "bold"
+                },
+                formatter: (value) =>
+                  (value / 1000).toLocaleString("en-IN", {
+                    minimumFractionDigits: 1,
+                    maximumFractionDigits: 1
+                  })
+              }
             }
           },
-          layout: { padding: { top: 70 } },
-          scales: {
-            y: { min: 1000, beginAtZero: false, ticks: { callback: v => v.toLocaleString("en-IN") } }
-          }
-        },
-        plugins: [ChartDataLabels]
-      });
+          plugins: [ChartDataLabels]
+        }
+      );
 
       // YEAR LINE (same as before, with datalabels)
-      window["yearBar"] = new Chart(document.getElementById("yearBar"), {
-        type: 'line',
-        data: {
-          labels: Object.keys(yearTotals),
-          datasets: [{
-            label: "Expenditure",
-            data: Object.values(yearTotals),
-            borderColor: "#FF6384",
-            backgroundColor: "rgba(255, 99, 132, 0.2)",
-            borderWidth: 2,
-            tension: 0.4,
-            pointBackgroundColor: "#FF6384",
-            pointRadius: 2,
-            pointHoverRadius: 3
-          }]
-        },
-        options: {
-          responsive: true,
-          layout: { padding: { top: 60 } },
-          plugins: {
-            legend: { display: false },
-            datalabels: {
-              anchor: 'end',
-              align: 'top',
-              offset: -6,
-              rotation: 50,
-              clip: false,
-              color: '#000',
-              font: { size: 10, weight: "bold" },
-              formatter: (value) => value.toLocaleString("en-IN") + "Cr"
+      window["yearBar"] = new Chart(
+        document.getElementById("yearBar"),
+        {
+          type: "line",
+          data: {
+            labels: Object.keys(yearTotals),
+            datasets: [{
+              label: "Expenditure",
+              data: Object.values(yearTotals),
+              borderColor: "#FF6384",
+              backgroundColor: "rgba(255,99,132,0.15)",
+              tension: 0.4,
+
+              pointRadius: 6,
+              pointHoverRadius: 8,
+              pointHitRadius: 6   
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+
+            // 🔥 
+            interaction: {
+              mode: "nearest",
+              intersect: true   // 👈 THIS IS THE KEY
+            },
+
+            hover: {
+              mode: "nearest",
+              intersect: true
+            },
+
+            plugins: {
+              legend: { display: false },
+
+              tooltip: {
+                enabled: true,
+                callbacks: {
+                  title: (items) => items[0].label,
+                  label: (ctx) => (ctx.parsed.y / 1000).toFixed(1)
+                }
+              },
+
+              datalabels: {
+                anchor: "end",
+                align: "top",
+                rotation: 90,
+                font: { size: 10, weight: "bold" },
+                formatter: (v) => (v / 1000).toFixed(1)
+              }
+            },
+
+            scales: {
+              x: {
+                autoSkip: false,
+                offset: false,
+                ticks: {
+                  maxRotation: 45,
+                  minRotation: 45
+                }
+              },
+              y: {
+                beginAtZero: true,
+                min: 0,
+                grace: "10%",
+                title: {
+                  display: true,
+                  text: "Values in 1000 Cr"
+                },
+                ticks: {
+                  callback: (v) => v / 1000
+                }
+              }
             }
           },
-          scales: {
-            x: { type: "category", ticks: { autoSkip: false, maxRotation: 45, minRotation: 45 } },
-            y: { beginAtZero: true, ticks: { callback: v => v.toLocaleString("en-IN") } }
-          }
-        },
-        plugins: [ChartDataLabels]
-      });
+          plugins: [ChartDataLabels]
+        }
+      );
+
     }
 
     // Populate year dropdown for month chart (shows unique years found in month_year)
@@ -263,7 +363,7 @@
       const yearSelect = document.getElementById("yearSelect");
       yearSelect.innerHTML = '';
 
-      // Extract years from month_year items like "4/2024" or "01/2025"
+
       const years = [...new Set(monthsData
         .map(m => {
           if (!m.month_year) return null;
@@ -293,143 +393,104 @@
       yearSelect.addEventListener('change', e => renderMonthChart(e.target.value));
     }
 
-    // Render month-wise grouped bar chart (X-axis: Jan..Dec, Y-axis: expenditure, bars per roman_heading)
+
+    let monthBarChart = null;
+
     function renderMonthChart(year) {
 
-      // Month names for X-axis
       const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
         "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
-      // Filter data for selected year
+      const yearStr = String(year);
+
       const filtered = monthsData.filter(r => {
-        const parts = String(r.month_year).split("/");
-        return parts[1] == year;   // year is "2024"
+        const my = String(r.month_year);
+        if (!my.includes("/")) return false;
+        const [a, b] = my.split("/");
+        return a.length === 4 ? a === yearStr : b === yearStr;
       });
 
-      if (filtered.length === 0) {
-        charts.monthBar?.destroy();
+      if (!filtered.length) {
+        monthBarChart?.destroy();
         return;
       }
 
-      // Parse month number
       filtered.forEach(r => {
-        const [m, y] = String(r.month_year).split("/");
-        r._month = Number(m);
+        const [m, y] = r.month_year.split("/");
+        r._month = Number(m.length === 4 ? y : m);
         r._value = Number(r.total_value) || 0;
       });
 
-      // Unique months sorted
       const months = [...new Set(filtered.map(r => r._month))].sort((a, b) => a - b);
-
-      // X-axis labels
       const labels = months.map(m => monthNames[m - 1]);
 
-      // Unique categories (roman_headings)
       const categories = [...new Set(filtered.map(r => r.roman_heading))];
 
-      // Auto colors for each category
       const colors = categories.map((_, i) =>
         `hsl(${(i * 360) / categories.length}, 70%, 80%)`
       );
 
+      const datasets = categories.map((cat, idx) => ({
+        label: cat,
+        stack: "combined",
+        backgroundColor: colors[idx],
+        data: months.map(m =>
+          filtered
+            .filter(r => r._month === m && r.roman_heading === cat)
+            .reduce((s, r) => s + r._value, 0)
+        )
+      }));
 
-      // Build stacked datasets
-      const datasets = categories.map((cat, idx) => {
-        const data = months.map(monthNo => {
+      monthBarChart?.destroy();
 
-          // Sum all matching rows (fixes your wrong total problem)
-          const total = filtered
-            .filter(r => r._month === monthNo && r.roman_heading === cat)
-            .reduce((sum, r) => sum + r._value, 0);
-
-          return total;
-        });
-
-
-        return {
-          label: cat,
-          data,
-          backgroundColor: colors[idx],
-          borderWidth: 1,
-          stack: 'combined'
-        };
-      });
-
-      charts.monthBar?.destroy();
-
-      window["monthBar"] = new Chart(document.getElementById("monthBar"), {
+      window["monthBar"] = monthBarChart = new Chart(
+        document.getElementById("monthBar"), {
         type: "bar",
-
-        data: {
-          labels,
-          datasets
-        },
-
+        data: { labels, datasets },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-
-          plugins: {
-            legend: {
-              display: true,
-              position: "top",
-              labels: { boxWidth: 12 }
-            },
-
-            datalabels: {
-              anchor: "center",
-              align: "center",
-              clip: false,
-              offset: 4,
-              color: "#000",
-              font: { size: 10, weight: "bold" },
-
-              // Auto-hide logic
-              formatter: (value, ctx) => {
-                // Hide zero values
-                if (!value || value === 0) return "";
-
-                // Get total of this stacked bar (this month)
-                const totalForMonth = ctx.chart.data.datasets
-                  .filter(ds => ds.stack === ctx.dataset.stack)
-                  .reduce((sum, ds) => sum + (ds.data[ctx.dataIndex] || 0), 0);
-
-                // Hide if < 5% of total (adjust threshold if needed)
-                if (value / totalForMonth < 0.05) {
-                  return "";  // hide small value
-                }
-
-                // Show formatted category value
-                return value.toLocaleString("en-IN") + "Cr";
-              }
-            }
-
-          },
-
           scales: {
-            x: {
-              stacked: true,
-              ticks: {
-                maxRotation: 45,
-                minRotation: 30
-              }
-            },
+            x: { stacked: true },
             y: {
               stacked: true,
-              beginAtZero: true,
-              ticks: { callback: v => v.toLocaleString("en-IN") }
+              title: {
+                display: true,
+                text: 'Values in 1000 Cr',
+              },
+              ticks: {
+                callback: (value) => value / 1000
+              }
             }
           },
+          plugins: {
+            datalabels: {
+              formatter: (v, ctx) => {
+                if (!v) return "";
 
-          layout: {
-            padding: { top: 20, right: 20, left: 10, bottom: 10 }
+                const total = ctx.chart.data.datasets
+                  .reduce((s, d) => s + (d.data[ctx.dataIndex] || 0), 0);
+
+                if (v / total < 0.05) return "";
+
+                return (v / 1000).toFixed(1);
+              }
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  let value = context.raw; // original value
+                  return (value / 1000).toFixed(1); // divide by 1000
+                }
+              }
+            }
           }
         },
-
         plugins: [ChartDataLabels]
       });
 
     }
+
 
     function getDefaultYear() {
       // pick the last available year from monthsData
@@ -447,7 +508,7 @@
       .then(html => {
         document.getElementById("header-placeholder").innerHTML = html;
 
-        // 🔥 After header loads, sidebar toggle finally works
+
         const menuBtn = document.getElementById("menu-btn");
         const sidebar = document.getElementById("sidebar");
         const content = document.getElementById("content-wrapper");
@@ -488,46 +549,81 @@
         modalCanvas.getContext("2d").canvas._chart = undefined;
 
         const cloneData = {
-          labels: [...original.data.labels],
-          datasets: original.data.datasets.map(ds => ({
-            label: ds.label,
-            data: ds.data.map(v => Number(v)),
-            backgroundColor: ds.backgroundColor,
-            borderWidth: ds.borderWidth || 1
-          }))
-        };
+  labels: [...original.data.labels],
+  datasets: original.data.datasets.map(ds => ({
+    label: ds.label,
+    data: ds.data.map(v => Number(v)),
+
+    
+    borderColor: ds.borderColor,
+    backgroundColor: ds.backgroundColor,
+    pointBackgroundColor: ds.pointBackgroundColor || ds.borderColor,
+    pointBorderColor: ds.pointBorderColor || ds.borderColor,
+    borderWidth: ds.borderWidth || 2,
+    tension: ds.tension,
+    fill: ds.fill ?? false
+  }))
+};
+
 
         const clonedOptions = JSON.parse(JSON.stringify(original.config.options));
-        if (clonedOptions.plugins && clonedOptions.plugins.datalabels) {
 
-  // ✅ ONLY for fieldPie
-  if (chartId === "fieldPie") {
-    clonedOptions.plugins.datalabels.formatter = (value) => {
-      if (value < 22000) return "";
-      return value.toLocaleString("en-IN") + " Cr";
-    };
-  }
+        // Reattach tick callback to divide by 1000
+        if (original.config.options.scales?.y?.ticks?.callback) {
+          clonedOptions.scales.y.ticks.callback = original.config.options.scales.y.ticks.callback;
+        }
 
-  // ✅ ALL OTHER CHARTS
-  else {
-    clonedOptions.plugins.datalabels.formatter = (value) => {
-      return value.toLocaleString("en-IN") + " Cr";
-    };
-  }
-}
+        // Reattach Y-axis title
+        if (original.config.options.scales?.y?.title) {
+          clonedOptions.scales.y.title = original.config.options.scales.y.title;
+        }
+
+        // Reattach datalabels formatter if needed
+        if (clonedOptions.plugins?.datalabels) {
+          const originalFormatter = clonedOptions.plugins.datalabels.formatter;
+          clonedOptions.plugins.datalabels.formatter = function (value, context) {
+            // Only apply for monthBar chart
+            if (chartId === "monthBar") {
+              const total = context.chart.data.datasets[0].data.reduce((sum, v) => sum + v, 0);
+              if (value / total < 0.01) return "";
+            }
+
+            // Keep original formatting if it exists
+            if (originalFormatter) {
+              return originalFormatter(value, context);
+            }
+
+            // Default behavior: divide by 1000 and 1 decimal
+            return (value / 1000).toFixed(1);
+          };
+        }
 
 
 
-        clonedOptions.responsive = true;
-        clonedOptions.maintainAspectRatio = false;
-        clonedOptions.animation = false;
-
-        modalChartInstance = new Chart(modalCanvas, {
+        modalChartInstance = new Chart(
+          document.getElementById("modalChart"), {
           type: original.config.type,
           data: cloneData,
-          options: clonedOptions,
-          plugins: [ChartDataLabels]
-        });
+          options: {
+            ...clonedOptions,
+            plugins: {
+              ...clonedOptions.plugins,
+              tooltip: {
+                ...clonedOptions.plugins.tooltip,
+                callbacks: {
+                  label: function (context) {
+                    let value = context.raw;
+                    return (value / 1000).toFixed(1);
+                  }
+                }
+              }
+            }
+          },
+          plugins: [ChartDataLabels] // keep the plugin active
+        }
+        );
+
+
 
         setTimeout(() => modalChartInstance.resize(), 150);
       };
