@@ -3,17 +3,16 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>KNNL 3D Map + Land Area Dashboard</title>
+  <title>KNNL Land Area Dashboard (Leaflet)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- MapLibre -->
-  <link href="https://unpkg.com/maplibre-gl@3.6.0/dist/maplibre-gl.css" rel="stylesheet">
-  <script src="https://unpkg.com/maplibre-gl@3.6.0/dist/maplibre-gl.js"></script>
+  <!-- Leaflet -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
-
-
 
   <link rel="stylesheet" href="style.css">
 </head>
@@ -26,7 +25,7 @@
     <a href="index.html">Home</a>
     <a href="WaterReserviors.html">Water Reservoirs</a>
     <a href="lift_irrigation.html">Lift Irrigation</a>
-    <a href="finance.html">Finance</a>
+    <a href="./Assest_inventory.html">Asset Inventory</a>
     <a href="project_dash.html">Projects</a>
     <a href="land_data.html">Land</a>
     <a href="finance_year_data.html">Yearly Finance</a>
@@ -34,45 +33,34 @@
 
   <div id="content-wrapper">
     <h2>Zone & Project Area Dashboard</h2>
+
     <div class="container">
 
       <div id="map">
-        <div id="mapLegend"></div>
         <button id="resetMapBtn">Reset View</button>
       </div>
 
-
-
-
       <div class="card">
-        <h3 id="chartTitle">Zone-wise Total Area (Acre)</h3>
-
+        <h3>Zone-wise Total Area (Acre)</h3>
         <div class="chart-wrapper">
           <canvas id="areaChart"></canvas>
         </div>
-
         <button id="backBtn">⬅ Back to All Zones</button>
       </div>
-
-
-
 
     </div>
   </div>
 
-  <!-- POPUP TABLE -->
-  <div id="dataPopup" style="
-  display:none; position:fixed; inset:0;
-  background:rgba(0,0,0,0.4); z-index:3000;
-  justify-content:center; align-items:center;">
+  <!-- POPUP -->
+  <div id="dataPopup" style="display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,0.4); z-index:3000;
+    justify-content:center; align-items:center;">
 
-    <div style="
-    background:white; padding:15px;
-    width:380px; border-radius:8px;
-    max-height:80vh; overflow-y:auto;">
+    <div style="background:white; padding:15px; width:380px;
+      border-radius:8px; max-height:80vh; overflow-y:auto;">
 
-      <button id="closePopup" style="float:right;background:red;color:white;
-             border:none;padding:6px 10px;cursor:pointer;">
+      <button id="closePopup"
+        style="float:right;background:red;color:white;border:none;padding:6px 10px;">
         X
       </button>
 
@@ -82,9 +70,6 @@
   </div>
 
   <script>
-    /* ----------------------------------------
-       GLOBALS
-    -----------------------------------------*/
     const areaChartElem = document.getElementById("areaChart");
 
     const zoneNameMap = {
@@ -103,307 +88,218 @@
       "Kalaburagi zone": "#e74c3c"
     };
 
+    function getZoneColorByApiZone(apiZone) {
+      return zoneColors[zoneNameMap[apiZone]] || "#aaa";
+    }
+
+    function hexToRgba(hex, alpha) {
+      const r = parseInt(hex.substring(1, 3), 16);
+      const g = parseInt(hex.substring(3, 5), 16);
+      const b = parseInt(hex.substring(5, 7), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
     let projectData = [];
     let areaChart = null;
+    let zoneLayer;
+    let map;
+
     const PROJECT_API = "/api/prjct_land_info";
 
-    /* ----------------------------------------
-       POPUP
-    -----------------------------------------*/
     function showPopup(zone) {
-
       const filtered = projectData.filter(r => r.zone_name === zone);
       const table = document.getElementById("popupTable");
-      const title = document.getElementById("popupTitle");
 
-      title.textContent = `${zone} – Project List`;
+      document.getElementById("popupTitle").textContent =
+        `${zone} – Project List`;
 
       table.innerHTML = `
-    <tr style="background:#f4f4f4">
-      <th style="border:1px solid #ddd;padding:4px;">Project</th>
-      <th style="border:1px solid #ddd;padding:4px;">Acre</th>
-     
-    </tr>
-  `;
+        <tr style="background:#f4f4f4">
+          <th>Project</th>
+          <th>Acre</th>
+        </tr>`;
 
       filtered.forEach(r => {
-        const projName = String(r.project_name || "");
-        const gunta = String(r.total_area_gunta || "");
-
-        const totalAcres =
+        const acres =
           (Number(r.total_area_acre) || 0) +
           ((Number(r.total_area_gunta) || 0) / 40);
 
         table.innerHTML += `
-      <tr>
-        <td>${projName}</td>
-        <td>${totalAcres.toFixed(2)}</td>
-      
-      </tr>
-    `;
+          <tr>
+            <td>${r.project_name}</td>
+            <td>${acres.toFixed(2)}</td>
+          </tr>`;
       });
 
       document.getElementById("dataPopup").style.display = "flex";
     }
 
-    document.getElementById("closePopup").onclick = () => {
+    document.getElementById("closePopup").onclick = () =>
       document.getElementById("dataPopup").style.display = "none";
-    };
 
-    /* ----------------------------------------
-       FETCH DATA
-    -----------------------------------------*/
-    (async function init() {
-      const res = await fetch(PROJECT_API);
-      projectData = await res.json();
-
-      renderZoneChart();
-    })();
-
-    /* ----------------------------------------
-       CHART HELPERS
-    -----------------------------------------*/
     function destroyChart() {
       if (areaChart) areaChart.destroy();
     }
 
-    function asNumber(v) {
-      return Number(String(v || 0).replace(/,/g, "")) || 0;
-    }
-
-    /* ----------------------------------------
-       ZONE DONUT CHART
-    -----------------------------------------*/
     function renderZoneChart() {
       destroyChart();
+
       const totals = {};
-
       projectData.forEach(r => {
-        const acre = Number(r.total_area_acre) || 0;
-        const gunta = Number(r.total_area_gunta) || 0;
-
-        const totalAcres = acre + (gunta / 40);
-
-        if (!totals[r.zone_name]) totals[r.zone_name] = 0;
-
-        totals[r.zone_name] += totalAcres;
+        const acres =
+          (Number(r.total_area_acre) || 0) +
+          ((Number(r.total_area_gunta) || 0) / 40);
+        totals[r.zone_name] = (totals[r.zone_name] || 0) + acres;
       });
-
 
       areaChart = new Chart(areaChartElem, {
         type: "doughnut",
-
         data: {
           labels: Object.keys(totals),
           datasets: [{
             data: Object.values(totals),
-            backgroundColor: ["#4BC0C0", "#FF6384", "#FFCE56", "#36A2EB", "#9966FF"]
+            backgroundColor: Object.keys(totals).map(z =>
+              getZoneColorByApiZone(z)
+            )
           }]
         },
-
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-
+          onClick: (evt, el) => {
+            if (!el.length) return;
+            applyZoneSelection(areaChart.data.labels[el[0].index]);
+          },
           plugins: {
-            legend: {
-              position: 'top',
-              align: 'center',
-              labels: {
-                boxWidth: 15,
-                padding: 10,
-                color: '#333',
-                font: { size: 12, weight: 'bold' }
-              }
-            },
-
             datalabels: {
-              color: '#fff',
-              font: { weight: 'bold', size: 14 },
-              anchor: 'center',
-              align: 'center',
-              formatter: (v) => v.toFixed(2)
-
+              color: "#fff",
+              font: { weight: "bold" },
+              formatter: v => v.toFixed(2)
             }
           }
         },
-
         plugins: [ChartDataLabels]
       });
-
 
       document.getElementById("backBtn").style.display = "none";
     }
 
-    /* ----------------------------------------
-       BACK BUTTON
-    -----------------------------------------*/
+    function applyZoneSelection(apiZone) {
+      showPopup(apiZone);
+      document.getElementById("backBtn").style.display = "block";
+
+      areaChart.data.datasets[0].backgroundColor =
+        areaChart.data.labels.map(l =>
+          l === apiZone
+            ? getZoneColorByApiZone(l)
+            : hexToRgba(getZoneColorByApiZone(l), 0.55)
+        );
+      areaChart.update();
+
+      zoneLayer.eachLayer(layer => {
+        const geoName = layer.feature.properties.zone_name;
+        const selectedGeo = zoneNameMap[apiZone];
+        layer.setStyle({
+          fillOpacity: geoName === selectedGeo ? 0.85 : 0.75
+        });
+      });
+    }
+
     document.getElementById("backBtn").onclick = () => {
       renderZoneChart();
       document.getElementById("dataPopup").style.display = "none";
       document.getElementById("backBtn").style.display = "none";
+
+      zoneLayer.eachLayer(layer =>
+        layer.setStyle({ fillOpacity: 0.85 })
+      );
+
+      map.setView([15.3, 75.7], 7);
     };
 
-    /* ----------------------------------------
-       MAP
-    -----------------------------------------*/
-    const map = new maplibregl.Map({
-      container: "map",
-      style: "https://demotiles.maplibre.org/style.json",
-      center: [75.7, 15.3],
-      zoom: 6.8
-    });
-    const hoverPopup = new maplibregl.Popup({
-      closeButton: false,
-      closeOnClick: false
-    });
+    map = L.map("map",{attributionControl: false }).setView([15.3, 75.7], 7);
 
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-    map.on("load", async () => {
+    (async () => {
+      const zonesGeo = await fetch("KNNL_Zones.geojson").then(r => r.json());
 
-      const districts = await (await fetch("Karnataka.geojson")).json();
-      map.addSource("districts", { type: "geojson", data: districts });
-
-      map.addLayer({
-        id: "districts-outline",
-        type: "line",
-        source: "districts",
-        paint: { "line-color": "#444", "line-width": 1.4 }
-      });
-
-      const zonesGeo = await (await fetch("KNNL_Zones.geojson")).json();
-
-      zonesGeo.features.forEach(f => {
-        f.properties.color =
-          zoneColors[f.properties.zone_name] || "#aaa";
-      });
-
-      map.addSource("zones", { type: "geojson", data: zonesGeo });
-
-      map.addLayer({
-        id: "zones-fill",
-        type: "fill",
-        source: "zones",
-        paint: {
-          "fill-color": ["get", "color"],
-          "fill-opacity": 0.65
-        }
-      });
-      /* SHOW ZONE NAME ON HOVER */
-      map.on("mousemove", "zones-fill", (e) => {
-        const zoneName = e.features[0].properties.zone_name;
-
-        hoverPopup
-          .setLngLat(e.lngLat)
-          .setHTML(`<div style="font-size:14px;font-weight:600;">${zoneName}</div>`)
-          .addTo(map);
-      });
-
-      map.on("mouseleave", "zones-fill", () => {
-        hoverPopup.remove();
-      });
-
-      /* CLICK ON ZONE */
-      map.on("click", "zones-fill", (e) => {
-
-        const geoName = e.features[0].properties.zone_name;
-
-        const apiZone = Object.keys(zoneNameMap)
-          .find(z => zoneNameMap[z] === geoName);
-
-        if (!apiZone) return;
-
-        /* Always stay on ZONE chart */
-        renderZoneChart();
-
-        /* Show projects below */
-        showPopup(apiZone);
-
-        /* SHOW BACK BUTTON */
-        document.getElementById("backBtn").style.display = "block";
-
-
-        /* HIGHLIGHT COLORS FIX */
-        setTimeout(() => {
-          const labels = areaChart.data.labels;
-          const colors = [];
-
-          labels.forEach(label => {
-            const mapped = zoneNameMap[label] || label;
-            const c = zoneColors[mapped] || "#cccccc";
-
-            if (mapped === zoneNameMap[apiZone]) {
-              colors.push(c); // highlight selected
-            } else {
-              const r = parseInt(c.substring(1, 3), 16);
-              const g = parseInt(c.substring(3, 5), 16);
-              const b = parseInt(c.substring(5, 7), 16);
-              colors.push(`rgba(${r},${g},${b},0.25)`); // dim others
-            }
+      zoneLayer = L.geoJSON(zonesGeo, {
+        style: f => ({
+          fillColor: zoneColors[f.properties.zone_name],
+          fillOpacity: 0.85,
+          color: "#333",
+          weight: 1
+        }),
+        onEachFeature: (f, layer) => {
+          layer.bindTooltip(f.properties.zone_name);
+          layer.on("click", () => {
+            const apiZone = Object.keys(zoneNameMap)
+              .find(z => zoneNameMap[z] === f.properties.zone_name);
+            if (apiZone) applyZoneSelection(apiZone);
           });
+        }
+      }).addTo(map);
+    })();
 
-          areaChart.data.datasets[0].backgroundColor = colors;
-          areaChart.update();
-        }, 200);
-      });
-    });
-
-    /* ----------------------------------------
-       RESET BUTTON
-    -----------------------------------------*/
     document.getElementById("resetMapBtn").onclick = () => {
-
-      // Reset chart to full zones
       renderZoneChart();
-
-      // Close popup if open
       document.getElementById("dataPopup").style.display = "none";
       document.getElementById("backBtn").style.display = "none";
 
-      // Reset map view WITHOUT zoom animation
-      map.jumpTo({
-        center: [75.7, 15.3],
-        zoom: 6.8,
-        pitch: 0,
-        bearing: 0
-      });
+      zoneLayer.eachLayer(layer =>
+        layer.setStyle({ fillOpacity: 0.85 })
+      );
+
+      map.setView([15.3, 75.7], 7);
     };
-    fetch("header.html")
-      .then(res => res.text())
-      .then(html => {
-        document.getElementById("header-placeholder").innerHTML = html;
 
-        //sidebar toggle
-        let isOpen = false;
+   fetch("header.html")
+  .then(res => res.text())
+  .then(html => {
+    document.getElementById("header-placeholder").innerHTML = html;
 
-        const menuBtn = document.getElementById("menu-btn");
-        const sidebar = document.getElementById("sidebar");
-        const content = document.getElementById("content-wrapper");
+    let isOpen = false; // ✅ FIX 1: declare state
 
-        // Toggle sidebar using the menu button
-        menuBtn.addEventListener("click", (event) => {
-          event.stopPropagation(); // Prevent click from closing it immediately
-          isOpen = !isOpen;
-          sidebar.style.right = isOpen ? "0px" : "-240px";
-          content.classList.toggle("sidebar-open", isOpen);
-        });
+    const menuBtn = document.getElementById("menu-btn");
+    const sidebar = document.getElementById("sidebar");
+    const content = document.getElementById("content-wrapper");
 
-        // Close sidebar when clicking anywhere outside
-        document.addEventListener("click", (event) => {
-          if (
-            isOpen &&
-            !sidebar.contains(event.target) &&
-            !menuBtn.contains(event.target)
-          ) {
-            isOpen = false;
-            sidebar.style.right = "-240px";
-            content.classList.remove("sidebar-open");
-          }
-        });
+    if (menuBtn && sidebar) {
+      menuBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); // ✅ FIX 2: prevent instant close
 
+        isOpen = !isOpen;
+        sidebar.style.right = isOpen ? "0px" : "-240px";
+        content.classList.toggle("sidebar-open", isOpen);
       });
+    }
 
+    // ✅ Click outside to close sidebar
+    document.addEventListener("click", (e) => {
+      if (
+        isOpen &&
+        !sidebar.contains(e.target) &&
+        !menuBtn.contains(e.target)
+      ) {
+        isOpen = false;
+        sidebar.style.right = "-240px";
+        content.classList.remove("sidebar-open");
+      }
+    });
+
+    // Your existing listener (unchanged)
+    window.addEventListener("message", (event) => {
+      if (event.data?.action === "closeFullscreen") {
+        const fs = document.getElementById("fullscreenIframeWrapper");
+        if (fs) fs.style.display = "none";
+      }
+    });
+  });
+
+    (async () => {
+      projectData = await fetch(PROJECT_API).then(r => r.json());
+      renderZoneChart();
+    })();
   </script>
-</body>
 
+</body>
 </html>
