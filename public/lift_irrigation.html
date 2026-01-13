@@ -69,40 +69,58 @@
 
 
     async function loadSheets(file) {
-      const container = document.getElementById("fileGrid");
-      const sheetSection = document.getElementById("sheetSection");
-      const dataContainer = document.getElementById("dataContainer");
+  const container = document.getElementById("fileGrid");
+  const sheetSection = document.getElementById("sheetSection");
+  const dataContainer = document.getElementById("dataContainer");
 
-      container.style.display = "none";
-      sheetSection.innerHTML = `<h2>${file.replace(".xlsx", "")}</h2><p>Select a project to view data:</p>`;
-      dataContainer.innerHTML = "";
+  container.style.display = "none";
+  sheetSection.innerHTML = `<h2>${file.replace(".xlsx", "")}</h2><p>Select a project to view data:</p>`;
+  dataContainer.innerHTML = "";
 
-      const res = await fetch(`/api/sheets?file=${encodeURIComponent(file)}`);
-      const sheets = await res.json();
+  const res = await fetch(`/api/sheets?file=${encodeURIComponent(file)}`);
+  const sheets = await res.json();
 
-      if (!sheets.length) {
-        sheetSection.innerHTML += "<p class='no-data'>No sheets found.</p>";
-        return;
-      }
+  if (!sheets.length) {
+    sheetSection.innerHTML += "<p class='no-data'>No sheets found.</p>";
+    return;
+  }
 
-      sheets.forEach(sheet => {
-        const btn = document.createElement("button");
-        btn.className = "sheet-btn";
-        btn.textContent = sheet;
-        btn.onclick = () => loadData(file, sheet);
-        sheetSection.appendChild(btn);
-      });
+  let hasAnyData = false;
 
-      const back = document.createElement("button");
-      back.className = "back-btn";
-      back.textContent = "← Back to Files";
-      back.onclick = () => {
-        document.getElementById("sheetSection").innerHTML = "";
-        dataContainer.innerHTML = "";
-        container.style.display = "flex";
-      };
-      sheetSection.appendChild(back);
-    }
+  // IMPORTANT: use for...of so await works
+  for (const sheet of sheets) {
+    const dataRes = await fetch(
+      `/api/data?file=${encodeURIComponent(file)}&sheet=${encodeURIComponent(sheet)}`
+    );
+    const data = await dataRes.json();
+
+    // ❌ skip empty sheets
+    if (!data || data.length === 0) continue;
+
+    hasAnyData = true;
+
+    const btn = document.createElement("button");
+    btn.className = "sheet-btn";
+    btn.textContent = sheet;
+    btn.onclick = () => loadData(file, sheet);
+    sheetSection.appendChild(btn);
+  }
+
+  if (!hasAnyData) {
+    sheetSection.innerHTML += "<p class='no-data'>No sheets with data found.</p>";
+  }
+
+  const back = document.createElement("button");
+  back.className = "back-btn";
+  back.textContent = "← Back to Files";
+  back.onclick = () => {
+    sheetSection.innerHTML = "";
+    dataContainer.innerHTML = "";
+    container.style.display = "flex";
+  };
+  sheetSection.appendChild(back);
+}
+
 
 async function loadData(file, sheet) {
   const container = document.getElementById("dataContainer");
@@ -178,7 +196,7 @@ async function loadData(file, sheet) {
 
   //ADD BACK TO TOP 
   const topBtn = document.createElement("button");
-  topBtn.textContent = "↑ Back to Sheets";
+  topBtn.textContent = "↑ Back to Projects";
   topBtn.className = "go-top-btn";
   topBtn.onclick = () => {
     document.getElementById("sheetSection").scrollIntoView({
@@ -236,7 +254,7 @@ async function loadData(file, sheet) {
     <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
     <a href="./WaterReserviors.html">Water Reservoirs</a>
     <a href="./lift_irrigation.html">Lift Irrigation</a>
-    <a href="./finance.html">Finance</a>
+    <a href="./Assest_inventory.html">Assest Inventory</a>
     <a href="./project_dash.html">Projects</a>
     <a href="./land_data.html">Land</a>
     <a href="./finance_year_data.html">Yearly Finance</a>
