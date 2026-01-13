@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Neeravari Assets Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+
+        #filterBox {
+            position: absolute;
+
+            left: 10px;
+            width: 260px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, .3);
+            z-index: 1000;
+            font-size: 13px;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+
+        .scroll-section {
+            max-height: 140px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 4px;
+            margin-top: 4px;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .cat-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 1px solid #000;
+            pointer-events: none;
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #ddd;
+            border-top: 5px solid #0078ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-text {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #333;
+        }
+        /* Container behaves like a table */
+#categoryFilters {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 3px;
+}
+
+/* One row */
+.cat-row {
+  display: grid;
+  grid-template-columns: 18px 20px auto;
+  align-items: center;
+  column-gap: 3px;
+  white-space: nowrap;
+}
+
+/* Perfect circle */
+.cat-color {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  border: 1px solid #444;
+}
+
+/* Category text */
+.cat-name {
+  font-size: 13px;
+  line-height: 1;
+}
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* =========================
+   TABLET (≤ 900px)
+========================= */
+        @media (max-width: 900px) {
+            #map {
+                height: calc(100vh - 120px);
+            }
+
+            #filterBox {
+                width: 220px;
+                font-size: 12px;
+                max-height: 70vh;
+            }
+        }
+
+        /* =========================
+   MOBILE (≤ 600px)
+========================= */
+        @media (max-width: 600px) {
+
+            h2 {
+                font-size: 16px;
+                text-align: center;
+                margin: 8px 0;
+            }
+
+            #map {
+                height: calc(100vh - 60px);
+            }
+
+            /* Filter becomes bottom drawer */
+            #filterBox {
+                position: fixed;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                max-height: 45vh;
+                border-radius: 12px 12px 0 0;
+                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+                overflow-y: auto;
+                z-index: 1500;
+                padding-bottom: 20px;
+            }
+
+            .scroll-section {
+                max-height: 100px;
+            }
+
+            label {
+                font-size: 13px;
+            }
+
+            /* Loader centered on mobile */
+            #loadingOverlay {
+                padding: 20px;
+                text-align: center;
+            }
+
+            /* Zoom buttons move down (avoid header overlap) */
+            .leaflet-top.leaflet-right {
+                margin-top: 70px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="header-placeholder"></div>
+    <div id="sidebar" class="sidebar">
+        <a href="index.html"><i class="fa-solid fa-house"></i> Home</a>
+        <a href="./WaterReserviors.html">Water Reservoirs</a>
+        <a href="./lift_irrigation.html">Lift Irrigation</a>
+        <a href="./Assest_inventory.html">Assest Inventory</a>
+        <a href="./project_dash.html">Projects</a>
+        <a href="./land_data.html">Land</a>
+        <a href="./finance_year_data.html">Yearly Finance</a>
+    </div>
+    <h2>Neeravari Assets</h2>
+    <div id="loadingOverlay">
+        <div class="loader"></div>
+        <div class="loading-text">Loading Neeravari Assets…</div>
+    </div>
+
+    <div id="filterBox">
+
+        <b>Filter by Category</b>
+        <label>
+            <input type="checkbox" id="selectAllCat" checked>
+            <b>Select / Deselect All</b>
+        </label>
+        <div id="categoryFilters" class="scroll-section"></div>
+
+        <hr>
+
+        <b>Filter by Sub Category</b>
+        <label>
+            <input type="checkbox" id="selectAllSub" checked>
+            <b>Select / Deselect All</b>
+        </label>
+        <div id="subCategoryFilters" class="scroll-section"></div>
+
+        <hr>
+
+        <b>Filter by Town</b>
+        <label>
+            <input type="checkbox" id="selectAllTown" checked>
+            <b>Select / Deselect All</b>
+        </label>
+        <div id="townFilters" class="scroll-section"></div>
+    </div>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <script>
+        /* ---------------- MAP ---------------- */
+        const map = L.map("map", { zoomControl: false, attributionControl: false }).setView([16.5, 75.0], 8);
+
+
+
+        L.control.zoom({
+            position: "topright"
+        }).addTo(map);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19
+        }).addTo(map);
+
+        /* ---------------- DISTRICT (STATIC LAYER) ---------------- */
+        fetch("dist.geojson")
+            .then(r => r.json())
+            .then(d =>
+                L.geoJSON(d, {
+                    style: {
+                        color: "#555",
+                        weight: 1,
+                        fillOpacity: 0.3
+                    }
+                }).addTo(map)
+            );
+
+        /* ---------------- GLOBALS ---------------- */
+        let geojsonData;
+        let assetLayer;
+        let subCategoryMap = {};
+        let currentSubSelection = new Set();
+
+        /* ---------------- CATEGORY COLOR ---------------- */
+        function getCategoryColor(category) {
+            let hash = 0;
+            for (let i = 0; i < category.length; i++) {
+                hash = category.charCodeAt(i) + ((hash << 5) - hash);
+            }
+            return `hsl(${Math.abs(hash) % 360},70%,50%)`;
+        }
+
+        /* ---------------- DRAW ASSETS (DYNAMIC) ---------------- */
+        function drawAssets(cats, subs, towns) {
+            if (assetLayer) map.removeLayer(assetLayer);
+
+            assetLayer = L.geoJSON(geojsonData, {
+                filter: f =>
+                    cats.includes(f.properties.asset_ctgr) &&
+                    subs.includes(f.properties.asset_sub_) &&
+                    towns.includes(f.properties.town_villa),
+
+                pointToLayer: (f, latlng) =>
+                    L.circleMarker(latlng, {
+                        radius: 6,
+                        fillColor: getCategoryColor(f.properties.asset_ctgr),
+                        color: "#000",
+                        weight: 1,
+                        fillOpacity: 0.9
+                    }),
+
+                onEachFeature: (f, l) =>
+                    l.bindPopup(`
+                <b>Asset Name:</b> ${f.properties.asset_name}<br>
+                <b>Category:</b> ${f.properties.asset_ctgr}<br>
+                <b>Sub Category:</b> ${f.properties.asset_sub_}<br>
+                <b>Town:</b> ${f.properties.town_villa}<br>
+                <b>Asset Type:</b> ${f.properties.asset_type}
+            `)
+            }).addTo(map);
+        }
+
+        /* ---------------- SUB CATEGORY RENDER ---------------- */
+        function renderSubCategories(selectedCats) {
+            const div = document.getElementById("subCategoryFilters");
+            div.innerHTML = "";
+
+            let subs = new Set();
+            selectedCats.forEach(c =>
+                (subCategoryMap[c] || []).forEach(s => subs.add(s))
+            );
+
+            if (!currentSubSelection.size)
+                subs.forEach(s => currentSubSelection.add(s));
+
+            subs.forEach(s => {
+                div.innerHTML += `
+            <label>
+                <input type="checkbox" class="subCheck" value="${s}" checked>
+                ${s}
+            </label>`;
+            });
+
+            document.querySelectorAll(".subCheck").forEach(cb =>
+                cb.onchange = () => {
+                    cb.checked
+                        ? currentSubSelection.add(cb.value)
+                        : currentSubSelection.delete(cb.value);
+
+                    document.getElementById("selectAllSub").checked =
+                        [...document.querySelectorAll(".subCheck")].every(x => x.checked);
+
+                    redraw(false);
+                }
+            );
+
+            document.getElementById("selectAllSub").checked =
+                [...document.querySelectorAll(".subCheck")].every(x => x.checked);
+        }
+
+        /* ---------------- REDRAW ---------------- */
+        function redraw(rebuildSub = true) {
+            const cats = [...document.querySelectorAll(".catCheck")]
+                .filter(c => c.checked).map(c => c.value);
+
+            const towns = [...document.querySelectorAll(".townCheck")]
+                .filter(t => t.checked).map(t => t.value);
+
+            if (rebuildSub) {
+                currentSubSelection.clear();
+                renderSubCategories(cats);
+            }
+
+            drawAssets(cats, [...currentSubSelection], towns);
+        }
+        showLoader();
+
+        /* ---------------- LOAD ASSET DATA ---------------- */
+        fetch("Neera.geojson")
+            .then(r => r.json())
+            .then(data => {
+                geojsonData = data;
+
+                const cats = new Set();
+                const towns = new Set();
+
+                data.features.forEach(f => {
+                    cats.add(f.properties.asset_ctgr);
+                    towns.add(f.properties.town_villa);
+
+                    subCategoryMap[f.properties.asset_ctgr] ??= new Set();
+                    subCategoryMap[f.properties.asset_ctgr].add(f.properties.asset_sub_);
+                });
+
+                Object.keys(subCategoryMap).forEach(
+                    k => subCategoryMap[k] = [...subCategoryMap[k]]
+                );
+                /* SUB CATEGORY SELECT ALL */
+                document.getElementById("selectAllSub").onchange = e => {
+                    const checked = e.target.checked;
+
+                    document.querySelectorAll(".subCheck").forEach(cb => {
+                        cb.checked = checked;
+                        checked
+                            ? currentSubSelection.add(cb.value)
+                            : currentSubSelection.delete(cb.value);
+                    });
+
+                    redraw(false);
+                };
+
+                /* CATEGORY FILTER */
+                const catDiv = document.getElementById("categoryFilters");
+catDiv.innerHTML = "";
+
+cats.forEach(c => {
+  const row = document.createElement("div");
+  row.className = "cat-row";
+
+  row.innerHTML = `
+    <span class="cat-color" style="background:${getCategoryColor(c)}"></span>
+    <input type="checkbox" class="catCheck" value="${c}" checked>
+    <span class="cat-name">${c}</span>
+  `;
+
+  catDiv.appendChild(row);
+});
+
+
+                /* TOWN FILTER */
+                const townDiv = document.getElementById("townFilters");
+                towns.forEach(t =>
+                    townDiv.innerHTML += `
+            <label>
+                <input type="checkbox" class="townCheck" value="${t}" checked>
+                ${t}
+            </label>`
+                );
+
+                /* CATEGORY SELECT ALL */
+                document.getElementById("selectAllCat").onchange = e => {
+                    document.querySelectorAll(".catCheck")
+                        .forEach(cb => cb.checked = e.target.checked);
+                    redraw(true);
+                };
+
+                document.querySelectorAll(".catCheck").forEach(cb =>
+                    cb.onchange = () => {
+                        document.getElementById("selectAllCat").checked =
+                            [...document.querySelectorAll(".catCheck")].every(x => x.checked);
+                        redraw(true);
+                    }
+                );
+
+                /* TOWN SELECT ALL */
+                document.getElementById("selectAllTown").onchange = e => {
+                    document.querySelectorAll(".townCheck")
+                        .forEach(cb => cb.checked = e.target.checked);
+                    redraw(false);
+                };
+
+                document.querySelectorAll(".townCheck").forEach(cb =>
+                    cb.onchange = () => {
+                        document.getElementById("selectAllTown").checked =
+                            [...document.querySelectorAll(".townCheck")].every(x => x.checked);
+                        redraw(false);
+                    }
+                );
+
+                redraw(true);
+                map.fitBounds(L.geoJSON(data).getBounds());
+
+                // wait one frame so Leaflet finishes drawing
+                requestAnimationFrame(() => {
+                    hideLoader();
+                });
+
+            });
+        fetch("header.html")
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById("header-placeholder").innerHTML = html;
+
+                // 🔥 After header loads, sidebar toggle finally works
+                let isOpen = false;
+
+                const menuBtn = document.getElementById("menu-btn");
+                const sidebar = document.getElementById("sidebar");
+                const content = document.getElementById("content-wrapper");
+
+                // Toggle sidebar using the menu button
+                menuBtn.addEventListener("click", (event) => {
+                    event.stopPropagation(); // Prevent click from closing it immediately
+                    isOpen = !isOpen;
+                    sidebar.style.right = isOpen ? "0px" : "-240px";
+                    content.classList.toggle("sidebar-open", isOpen);
+                });
+
+                // Close sidebar when clicking anywhere outside
+                document.addEventListener("click", (event) => {
+                    if (
+                        isOpen &&
+                        !sidebar.contains(event.target) &&
+                        !menuBtn.contains(event.target)
+                    ) {
+                        isOpen = false;
+                        sidebar.style.right = "-240px";
+                        content.classList.remove("sidebar-open");
+                    }
+                });
+
+
+                window.addEventListener("message", (event) => {
+                    if (event.data.action === "closeFullscreen") {
+                        document.getElementById("fullscreenIframeWrapper").style.display = "none";
+                    }
+                });
+            });
+        function showLoader() {
+            document.getElementById("loadingOverlay").style.display = "flex";
+        }
+
+        function hideLoader() {
+            document.getElementById("loadingOverlay").style.display = "none";
+        }
+
+
+    </script>
+
+</body>
+
+</html>
+
+<!---Map_Libre-->
+<!-- <!DOCTYPE html>
+<html>
+<head>
+    <title>Neeravari Assets Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    
+    <link href="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.css" rel="stylesheet" />
+    <script src="https://unpkg.com/maplibre-gl@3.6.2/dist/maplibre-gl.js"></script>
+
+    <style>
+        body { margin: 0; font-family: Arial; }
+        #map { height: 500px; width: 100%; }
+
+        #filterBox {
+            position: absolute;
+            left: 10px;
+            top: 80px;
+            width: 260px;
+            background: #fff;
+            padding: 10px;
+            border-radius: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,.3);
+            z-index: 1000;
+            font-size: 13px;
+            max-height: 75vh;
+            overflow-y: auto;
+        }
+
+        .scroll-section {
+            max-height: 140px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 4px;
+            margin-top: 4px;
+        }
+
+        label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        .cat-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 1px solid #000;
+        }
+
+        #loadingOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(255,255,255,0.9);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #ddd;
+            border-top: 5px solid #0078ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+
+<body>
+
+<h2 style="margin:10px">Neeravari Assets</h2>
+
+<div id="loadingOverlay">
+    <div class="loader"></div>
+    <div style="margin-top:10px">Loading Neeravari Assets…</div>
+</div>
+
+<div id="filterBox">
+
+    <b>Filter by Category</b>
+    <label>
+        <input type="checkbox" id="selectAllCat" checked>
+        <b>Select / Deselect All</b>
+    </label>
+    <div id="categoryFilters" class="scroll-section"></div>
+
+    <hr>
+
+    <b>Filter by Sub Category</b>
+    <label>
+        <input type="checkbox" id="selectAllSub" checked>
+        <b>Select / Deselect All</b>
+    </label>
+    <div id="subCategoryFilters" class="scroll-section"></div>
+
+    <hr>
+
+    <b>Filter by Town</b>
+    <label>
+        <input type="checkbox" id="selectAllTown" checked>
+        <b>Select / Deselect All</b>
+    </label>
+    <div id="townFilters" class="scroll-section"></div>
+</div>
+
+<div id="map"></div>
+
+<script>
+/* ---------------- MAP ---------------- */
+const map = new maplibregl.Map({
+    container: "map",
+    style: "https://tiles.openfreemap.org/styles/liberty", // OSM roads
+    center: [75.0, 16.5],
+    zoom: 8
+});
+map.addControl(new maplibregl.NavigationControl(), "top-right");
+
+/* ---------------- GLOBALS ---------------- */
+let geojsonData;
+let subCategoryMap = {};
+let currentSubSelection = new Set();
+
+/* ---------------- COLOR ---------------- */
+function getCategoryColor(category) {
+    let hash = 0;
+    for (let i = 0; i < category.length; i++)
+        hash = category.charCodeAt(i) + ((hash << 5) - hash);
+    return `hsl(${Math.abs(hash) % 360},70%,50%)`;
+}
+
+/* ---------------- APPLY FILTERS ---------------- */
+function applyFilters() {
+    const cats = [...document.querySelectorAll(".catCheck")]
+        .filter(c => c.checked).map(c => c.value);
+
+    const towns = [...document.querySelectorAll(".townCheck")]
+        .filter(t => t.checked).map(t => t.value);
+
+    const subs = [...currentSubSelection];
+
+    map.setFilter("assets-layer", [
+        "all",
+        ["in", ["get", "asset_ctgr"], ["literal", cats]],
+        ["in", ["get", "asset_sub_"], ["literal", subs]],
+        ["in", ["get", "town_villa"], ["literal", towns]]
+    ]);
+}
+
+/* ---------------- LOAD DATA ---------------- */
+map.on("load", async () => {
+
+    geojsonData = await fetch("Neera.geojson").then(r => r.json());
+
+    map.addSource("assets", {
+        type: "geojson",
+        data: geojsonData,
+        cluster: false   // SAME AS LEAFLET (draw everything)
+    });
+
+    map.addLayer({
+        id: "assets-layer",
+        type: "circle",
+        source: "assets",
+        paint: {
+            "circle-radius": 5,
+            "circle-color": "#ff5722",
+            "circle-stroke-color": "#000",
+            "circle-stroke-width": 0.5,
+            "circle-opacity": 0.9
+        }
+    });
+
+    /* ---------------- BUILD FILTERS ---------------- */
+    const cats = new Set(), towns = new Set();
+
+    geojsonData.features.forEach(f => {
+        cats.add(f.properties.asset_ctgr);
+        towns.add(f.properties.town_villa);
+        subCategoryMap[f.properties.asset_ctgr] ??= new Set();
+        subCategoryMap[f.properties.asset_ctgr].add(f.properties.asset_sub_);
+    });
+
+    // Category UI
+    const catDiv = document.getElementById("categoryFilters");
+    cats.forEach(c => {
+        catDiv.innerHTML += `
+        <label>
+            <span class="cat-color" style="background:${getCategoryColor(c)}"></span>
+            <input type="checkbox" class="catCheck" value="${c}" checked>
+            ${c}
+        </label>`;
+    });
+
+    // Town UI
+    const townDiv = document.getElementById("townFilters");
+    towns.forEach(t => {
+        townDiv.innerHTML += `
+        <label>
+            <input type="checkbox" class="townCheck" value="${t}" checked>
+            ${t}
+        </label>`;
+    });
+
+    // Sub category UI
+    function renderSubCategories(selectedCats) {
+        const div = document.getElementById("subCategoryFilters");
+        div.innerHTML = "";
+        let subs = new Set();
+
+        selectedCats.forEach(c =>
+            [...subCategoryMap[c]].forEach(s => subs.add(s))
+        );
+
+        if (!currentSubSelection.size)
+            subs.forEach(s => currentSubSelection.add(s));
+
+        subs.forEach(s => {
+            div.innerHTML += `
+            <label>
+                <input type="checkbox" class="subCheck" value="${s}" checked>
+                ${s}
+            </label>`;
+        });
+
+        document.querySelectorAll(".subCheck").forEach(cb =>
+            cb.onchange = () => {
+                cb.checked ? currentSubSelection.add(cb.value)
+                           : currentSubSelection.delete(cb.value);
+                applyFilters();
+            }
+        );
+    }
+
+    renderSubCategories([...cats]);
+
+    document.querySelectorAll(".catCheck").forEach(cb =>
+        cb.onchange = () => {
+            currentSubSelection.clear();
+            renderSubCategories(
+                [...document.querySelectorAll(".catCheck")]
+                    .filter(c => c.checked).map(c => c.value)
+            );
+            applyFilters();
+        }
+    );
+
+    document.querySelectorAll(".townCheck").forEach(cb =>
+        cb.onchange = applyFilters
+    );
+
+    hideLoader();
+});
+
+/* ---------------- LOADER ---------------- */
+function hideLoader() {
+    document.getElementById("loadingOverlay").style.display = "none";
+}
+</script>
+
+</body>
+</html> -->
